@@ -194,3 +194,8 @@ void udf::type_checker::do_if_node(udf::if_node *const node, int lvl) {
 void udf::type_checker::do_if_else_node(udf::if_else_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
 }
+
+//---------------------------------------------------------------------------
+
+void udf::type_checker::do_block_node(udf::block_node *const node, int lvl) {
+}
