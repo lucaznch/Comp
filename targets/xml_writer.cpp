@@ -209,3 +209,6 @@ void udf::xml_writer::do_if_else_node(udf::if_else_node * const node, int lvl) {
 
 void udf::xml_writer::do_block_node(udf::block_node * const node, int lvl) {
 }
+
+void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl) {
+}
