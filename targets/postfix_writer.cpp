@@ -297,3 +297,6 @@ void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
 }
 
+void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
+}
+
