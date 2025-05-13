@@ -216,3 +216,6 @@ void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl)
 void udf::xml_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
 }
 
+void udf::xml_writer::do_return_node(udf::return_node * const node, int lvl) {
+}
+
