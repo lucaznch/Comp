@@ -211,3 +211,6 @@ void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {
 
 void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
 }
+
+void udf::type_checker::do_nullptr_node(udf::nullptr_node *const node, int lvl) {
+}
