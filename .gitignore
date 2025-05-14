@@ -7,3 +7,7 @@ udf
 *.tab.c
 *.tab.h
 udf_scanner.cpp
+.vscode
+UML-cdk.pdf
+tests
+*.sh
