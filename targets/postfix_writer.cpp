@@ -303,3 +303,6 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
 void udf::postfix_writer::do_return_node(udf::return_node * const node, int lvl) {
 }
 
+void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
+}
+

@@ -208,3 +208,6 @@ void udf::type_checker::do_function_call_node(udf::function_call_node *const nod
 
 void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {
 }
+
+void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
+}
