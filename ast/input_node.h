@@ -10,7 +10,7 @@ namespace udf {
   class input_node : public cdk::expression_node {
 
   public:
-    input_node(int lineno) noexcept : cdk::expression_node(lineno) {}
+    input_node(int lineno) : cdk::expression_node(lineno) {}
 
     void accept(basic_ast_visitor *sp, int level) { sp->do_input_node(this, level); }
 

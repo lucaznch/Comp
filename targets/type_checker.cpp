@@ -170,7 +170,7 @@ void udf::type_checker::do_print_node(udf::print_node *const node, int lvl) {
 }
 
 //---------------------------------------------------------------------------
-
+/*
 void udf::type_checker::do_read_node(udf::read_node *const node, int lvl) {
   try {
     node->argument()->accept(this, lvl);
@@ -178,13 +178,13 @@ void udf::type_checker::do_read_node(udf::read_node *const node, int lvl) {
     throw "undeclared variable '" + id + "'";
   }
 }
-
+*/
 //---------------------------------------------------------------------------
-
+/*
 void udf::type_checker::do_while_node(udf::while_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
 }
-
+*/
 //---------------------------------------------------------------------------
 
 void udf::type_checker::do_if_node(udf::if_node *const node, int lvl) {
@@ -213,4 +213,28 @@ void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const
 }
 
 void udf::type_checker::do_nullptr_node(udf::nullptr_node *const node, int lvl) {
+}
+
+void udf::type_checker::do_address_of_node(udf::address_of_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_index_node(udf::index_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_input_node(udf::input_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_malloc_node(udf::malloc_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_size_of_node(udf::size_of_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_for_node(udf::for_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_continue_node(udf::continue_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_break_node(udf::break_node * const node, int lvl) {
 }
