@@ -1,18 +1,15 @@
 #pragma once
 
-#include <cdk/ast/lvalue_node.h>
-#include <cdk/ast/expression_node.h>
+#include <cdk/ast/binary_expression_node.h>
 
 namespace udf {
   /**
    * Class for describing index_node nodes.
    */
-    class index_node : public cdk::lvalue_node {
-        cdk::expression_node *_ptr;
-        cdk::expression_node *_index;
+    class index_node : public cdk::binary_expression_node {
     public:
         index_node(int lineno, cdk::expression_node *ptr, cdk::expression_node *index):
-            cdk::lvalue_node(lineno), _ptr(ptr), _index(index) {}
+            cdk::binary_expression_node(lineno,ptr,index) {}
 
         void accept(basic_ast_visitor *sp, int level) { sp->do_index_node(this, level); } 
     };
