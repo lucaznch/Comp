@@ -8,14 +8,14 @@ namespace udf {
    * Class for describing program nodes.
    */
   class program_node : public cdk::basic_node {
-    cdk::basic_node *_statements;
+    cdk::sequence_node *_declarations;
 
   public:
-    program_node(int lineno, cdk::basic_node *statements) :
-        cdk::basic_node(lineno), _statements(statements) {
+    program_node(int lineno, cdk::sequence_node *declarations) :
+        cdk::basic_node(lineno), _declarations(declarations) {
     }
 
-    cdk::basic_node *statements() { return _statements; }
+    cdk::sequence_node *declarations() { return _declarations; }
 
     void accept(basic_ast_visitor *sp, int level) { sp->do_program_node(this, level); }
 

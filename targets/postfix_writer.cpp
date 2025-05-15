@@ -195,7 +195,7 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.LABEL("_main");
   _pf.ENTER(0);  // udf doesn't implement local variables
 
-  node->statements()->accept(this, lvl);
+  node->declarations()->accept(this, lvl);
 
   // end the main function
   _pf.INT(0);
