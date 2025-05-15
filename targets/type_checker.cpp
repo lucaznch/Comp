@@ -238,3 +238,24 @@ void udf::type_checker::do_continue_node(udf::continue_node * const node, int lv
 
 void udf::type_checker::do_break_node(udf::break_node * const node, int lvl) {
 }
+
+void udf::type_checker::do_capacity_node(udf::capacity_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_rank_node(udf::rank_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_dims_node(udf::dims_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_tensor_indexation_node(udf::tensor_indexation_node * const node, int lvl) {
+}
+
+void udf::type_checker::do_reshape_node(udf::reshape_node * const node, int lvl){
+}
+
+void udf::type_checker::do_contraction_node(udf::contraction_node * const node, int lvl){
+}
+
+void udf::type_checker::do_tensor_node(udf::tensor_node * const node, int lvl){
+}
