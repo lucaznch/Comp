@@ -63,7 +63,6 @@ list : stmt      { $$ = new cdk::sequence_node(LINE, $1); }
      ;
 
 stmt : expr ';'                         { $$ = new udf::evaluation_node(LINE, $1); }
-     | tPRINT expr ';'                  { $$ = new udf::print_node(LINE, $2); }
      | tIF '(' expr ')' stmt %prec tIFX { $$ = new udf::if_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt tELSE stmt { $$ = new udf::if_else_node(LINE, $3, $5, $7); }
      | '{' list '}'                     { $$ = $2; }

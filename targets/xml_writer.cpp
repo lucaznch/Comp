@@ -146,12 +146,14 @@ void udf::xml_writer::do_evaluation_node(udf::evaluation_node * const node, int 
   closeTag(node, lvl);
 }
 
+/*
 void udf::xml_writer::do_print_node(udf::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   node->argument()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
+*/
 
 //---------------------------------------------------------------------------
 /*
@@ -268,4 +270,7 @@ void udf::xml_writer::do_contraction_node(udf::contraction_node * const node, in
 }
 
 void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
+}
+
+void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
 }

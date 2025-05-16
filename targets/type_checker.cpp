@@ -165,9 +165,11 @@ void udf::type_checker::do_evaluation_node(udf::evaluation_node *const node, int
   node->argument()->accept(this, lvl + 2);
 }
 
+/*
 void udf::type_checker::do_print_node(udf::print_node *const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
 }
+*/
 
 //---------------------------------------------------------------------------
 /*
@@ -258,4 +260,7 @@ void udf::type_checker::do_contraction_node(udf::contraction_node * const node, 
 }
 
 void udf::type_checker::do_tensor_node(udf::tensor_node * const node, int lvl){
+}
+
+void udf::type_checker::do_write_node(udf::write_node * const node, int lvl) {
 }

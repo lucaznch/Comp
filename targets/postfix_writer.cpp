@@ -225,6 +225,7 @@ void udf::postfix_writer::do_evaluation_node(udf::evaluation_node * const node, 
   }
 }
 
+/*
 void udf::postfix_writer::do_print_node(udf::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl); // determine the value to print
@@ -240,6 +241,7 @@ void udf::postfix_writer::do_print_node(udf::print_node * const node, int lvl) {
   }
   _pf.CALL("println"); // print a newline
 }
+*/
 
 //---------------------------------------------------------------------------
 /*
@@ -352,4 +354,7 @@ void udf::postfix_writer::do_contraction_node(udf::contraction_node * const node
 }
 
 void udf::postfix_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
+}
+
+void udf::postfix_writer::do_write_node(udf::write_node * const node, int lvl) {
 }
