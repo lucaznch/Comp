@@ -36,8 +36,14 @@
 %token <s> tIDENTIFIER tSTRING
 %token tWHILE tIF tPRINT tREAD tBEGIN tEND
 
+%token tTYPE_INT tTYPE_REAL tTYPE_STRING tTYPE_VOID
+%token tPUBLIC tFORWARD tAUTO
+%token tFOR tBREAK tCONTINUE tRETURN
+%token tINPUT
+%token tWRITE tWRITELN
+
 %nonassoc tIFX
-%nonassoc tELSE
+%nonassoc tELIF tELSE
 
 %right '='
 %left tGE tLE tEQ tNE '>' '<'

@@ -17,18 +17,34 @@
 
 "--".*                 ; /* ignore comments */
 
+"int"                  return tTYPE_INT;
+"real"                 return tTYPE_REAL;
+"string"               return tTYPE_STRING;
+"void"                 return tTYPE_VOID;
+
+"public"               return tPUBLIC;
+"forward"              return tFORWARD;
+"auto"                 return tAUTO;
+
+"for"                  return tFOR; 
+"break"                return tBREAK;
+"continue"             return tCONTINUE;
+"return"               return tRETURN;
+
+"input"                return tINPUT;
+
+"write"                return tWRITE;
+"writeln"              return tWRITELN;
+
+"if"                   return tIF; 
+"elif"                 return tELIF;
+"else"                 return tELSE; 
+
 ">="                   return tGE; 
 "<="                   return tLE; 
 "=="                   return tEQ; 
 "!="                   return tNE; 
 
-"while"                return tWHILE; 
-"if"                   return tIF; 
-"else"                 return tELSE; 
-"print"                return tPRINT; 
-"read"                 return tREAD; 
-"begin"                return tBEGIN; 
-"end"                  return tEND; 
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
