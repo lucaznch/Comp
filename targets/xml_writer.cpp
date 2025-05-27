@@ -210,19 +210,89 @@ void udf::xml_writer::do_if_else_node(udf::if_else_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_block_node(udf::block_node * const node, int lvl) {
+  openTag(node, lvl);
+
+  if (node->declarations()) {
+    openTag("declarations", lvl + 2);
+    node->declarations()->accept(this, lvl + 4);
+    closeTag("declarations", lvl + 2);
+  }
+
+  if (node->instructions()) {
+    openTag("instructions", lvl + 2);
+    node->instructions()->accept(this, lvl + 4);
+    closeTag("instructions", lvl + 2);
+  }
+
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  openTag("qualifier", lvl + 2);
+  os() << node->qualifier();
+  closeTag("qualifier", lvl + 2);
+
+  openTag("type", lvl + 2);
+  os() << node->type()->name(); 
+  closeTag("type", lvl + 2);
+
+  openTag("identifier", lvl + 2);
+  os() << node->identifier();
+  closeTag("identifier", lvl + 2);
+
+  if (node->args()) {
+    openTag("arguments", lvl + 2);
+    node->args()->accept(this, lvl + 4);
+    closeTag("arguments", lvl + 2);
+  }
+
+  if (node->block()) {
+    openTag("body", lvl + 2);
+    node->block()->accept(this, lvl + 4);
+    closeTag("body", lvl + 2);
+  }
+
+  closeTag(node, lvl);
 }
 
+
+void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  openTag("qualifier", lvl + 2);
+  os() << node->qualifier();
+  closeTag("qualifier", lvl + 2);
+
+  openTag("type", lvl + 2);
+  os() << node->type()->name();  // print type name only
+  closeTag("type", lvl + 2);
+
+  openTag("identifier", lvl + 2);
+  os() << node->identifier();
+  closeTag("identifier", lvl + 2);
+
+  if (node->initializer()) {
+    openTag("initializer", lvl + 2);
+    node->initializer()->accept(this, lvl + 4);
+    closeTag("initializer", lvl + 2);
+  }
+
+  closeTag(node, lvl);
+}
+
+
 void udf::xml_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
+
 }
 
 void udf::xml_writer::do_return_node(udf::return_node * const node, int lvl) {
 }
 
-void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
-}
+
 
 void udf::xml_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {
 }
@@ -273,4 +343,18 @@ void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
 }
 
 void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
+    ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  openTag("newline", lvl + 2);
+  os() << node->newline();  // prints 0 or 1
+  closeTag("newline", lvl + 2);
+
+  if (node->arguments()) {
+    openTag("arguments", lvl + 2);
+    node->arguments()->accept(this, lvl + 4);
+    closeTag("arguments", lvl + 2);
+  }
+
+  closeTag(node, lvl);
 }
