@@ -268,7 +268,7 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
   closeTag("qualifier", lvl + 2);
 
   openTag("type", lvl + 2);
-  os() << node->type()->name();  // print type name only
+  os() << node->type()->name(); 
   closeTag("type", lvl + 2);
 
   openTag("identifier", lvl + 2);
@@ -290,6 +290,16 @@ void udf::xml_writer::do_function_call_node(udf::function_call_node * const node
 }
 
 void udf::xml_writer::do_return_node(udf::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  if (node->retvalue()) {
+    openTag("retvalue", lvl + 2);
+    node->retvalue()->accept(this, lvl + 4);
+    closeTag("retvalue", lvl + 2);
+  }
+
+  closeTag(node, lvl);
 }
 
 
@@ -347,7 +357,7 @@ void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
   openTag(node, lvl);
 
   openTag("newline", lvl + 2);
-  os() << node->newline();  // prints 0 or 1
+  os() << !!node->newline();  // prints 0 or 1
   closeTag("newline", lvl + 2);
 
   if (node->arguments()) {

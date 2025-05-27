@@ -59,7 +59,7 @@
 %type <block_node> block
 %type <type> type
 %type <i> qualifier
-
+%type <s> string
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
 %}
@@ -70,10 +70,12 @@ program : decls { compiler->ast(new udf::program_node(LINE, $1)); }
 
 stmts : stmt      { $$ = new cdk::sequence_node(LINE, $1); }
      | stmts stmt { $$ = new cdk::sequence_node(LINE, $2, $1); }
+     | /* EMPTY */ {$$ = new cdk::sequence_node(LINE);}
      ;
 
 decls : decl      { $$ = new cdk::sequence_node(LINE, $1); }
      | decls decl { $$ = new cdk::sequence_node(LINE, $2, $1); }
+     | /* EMPTY */ {$$ = new cdk::sequence_node(LINE);}
      ;
 
 args : arg      { $$ = new cdk::sequence_node(LINE, $1); }
@@ -89,6 +91,7 @@ stmt : expr ';'                         { $$ = new udf::evaluation_node(LINE, $1
      | tIF '(' expr ')' stmt tELSE stmt { $$ = new udf::if_else_node(LINE, $3, $5, $7); }
      | tWRITE exprs ';' { $$ = new udf::write_node(LINE, $2, false);}
      | tWRITELN exprs ';' { $$ = new udf::write_node(LINE, $2, true);}
+     | tRETURN expr ';' {$$ = new udf::return_node(LINE, $2);}
      ;
 
 block: '{' decls stmts '}' { $$ = new udf::block_node(LINE, $2, $3);}
@@ -121,7 +124,7 @@ type : tTYPE_INT           { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT);
      ;
 
 expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
-     | tSTRING               { $$ = new cdk::string_node(LINE, $1); }
+     | string               { $$ = new cdk::string_node(LINE, $1); }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
@@ -140,6 +143,10 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }
      ;
 
+string
+     : tSTRING      { $$ = $1; }
+     | string tSTRING { $$ = new std::string(*$1 + *$2); delete $1; delete $2 ;}
+     ;
 lval : tIDENTIFIER             { $$ = new cdk::variable_node(LINE, $1); }
      ;
 
