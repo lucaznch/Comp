@@ -57,6 +57,7 @@
 %type <lvalue> lval
 %type <block> blck
 %type <type> type
+%type <s> string 
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
@@ -67,7 +68,7 @@ program : declrs { compiler->ast(new udf::program_node(LINE, $1)); }
         ;
 
 expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
-     | tSTRING               { $$ = new cdk::string_node(LINE, $1); }
+     | string                { $$ = new cdk::string_node(LINE, $1); delete $1; }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
@@ -86,12 +87,16 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }
      ;
 
-exprs : exprs expr            { $$ = new cdk::sequence_node(LINE, $2, $1); }
+exprs : exprs ',' expr            { $$ = new cdk::sequence_node(LINE, $3, $1); }
       | expr                  { $$ = new cdk::sequence_node(LINE, $1); }
       ;
 
 lval : tIDENTIFIER             { $$ = new cdk::variable_node(LINE, $1); }
      ; 
+
+string : string tSTRING { $$ = $1; $$->append(*$2); delete $2; }
+       | tSTRING        { $$ = $1; }
+       ;
 
 type : tTYPE_INT    { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      | tTYPE_REAL   { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
