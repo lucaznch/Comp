@@ -10,6 +10,18 @@
 
 // don't change this
 #define yyerror LexerError
+
+bool hex_to_int(int &val, const std::string &s) {
+  try {
+    val = std::stoi(s.c_str(), nullptr, 16);
+    return true;
+  } catch (std::invalid_argument &e) {
+    return false;
+  } catch (std::out_of_range &e) {
+    return false;
+  }
+}
+
 %}
 %x X_COMMENT X_STRING
 %%
@@ -62,6 +74,13 @@
 <X_STRING>\\.           *yylval.s += yytext[1];         // handle common escapes
 <X_STRING>\n            yyerror("newline in string");   // disallow newline in string
 <X_STRING>.             *yylval.s += *yytext;           // regular character
+
+0x[0-9a-fA-F]+ {
+  if (!hex_to_int(yylval.i, yytext)) {
+    yyerror("Invalid hex number");
+  }
+  return tINTEGER;
+}
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
