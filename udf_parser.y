@@ -41,15 +41,18 @@
 %token tFOR tBREAK tCONTINUE tRETURN
 %token tINPUT
 %token tWRITE tWRITELN
+%token tAND tOR
 
 %nonassoc tIFX
 %nonassoc tELIF tELSE
 
 %right '='
-%left tGE tLE tEQ tNE '>' '<' tAND tOR
+%left tOR
+%left tAND
+%left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc tUNARY tNOT
+%nonassoc tUNARY 
 
 %type <node> program arg declr instr elif
 %type <sequence> exprs args declrs instrs
@@ -71,7 +74,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | string                { $$ = new cdk::string_node(LINE, $1); delete $1; }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
-     | tNOT expr             { $$ = new cdk::not_node(LINE, $2); }
+     | '~' expr %prec tUNARY   {$$ = new cdk::not_node(LINE, $2);}
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr         { $$ = new cdk::sub_node(LINE, $1, $3); }
      | expr '*' expr         { $$ = new cdk::mul_node(LINE, $1, $3); }
@@ -79,12 +82,12 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | expr '%' expr         { $$ = new cdk::mod_node(LINE, $1, $3); }
      | expr '<' expr         { $$ = new cdk::lt_node(LINE, $1, $3); }
      | expr '>' expr         { $$ = new cdk::gt_node(LINE, $1, $3); }
+     | expr tAND expr         { $$ = new cdk::and_node(LINE, $1, $3); }
+     | expr tOR expr         { $$ = new cdk::or_node(LINE, $1, $3); }
      | expr tGE expr         { $$ = new cdk::ge_node(LINE, $1, $3); }
      | expr tLE expr         { $$ = new cdk::le_node(LINE, $1, $3); }
      | expr tNE expr         { $$ = new cdk::ne_node(LINE, $1, $3); }
      | expr tEQ expr         { $$ = new cdk::eq_node(LINE, $1, $3); }
-     | expr tAND expr        { $$ = new cdk::and_node(LINE, $1, $3); }
-     | expr tOR expr         { $$ = new cdk::or_node(LINE, $1, $3); }
      | '(' expr ')'          { $$ = $2; }
      | lval                  { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }

@@ -15,7 +15,9 @@ void udf::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
   // EMPTY
 }
 void udf::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
+    openTag(node, lvl);
+  node->argument()->accept(this, lvl + 2);
+  closeTag(node, lvl);
 }
 void udf::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
   // EMPTY
@@ -243,19 +245,16 @@ void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl)
   os() << qualifier;
   closeTag("qualifier", lvl + 2);
 
-  // type
-  openTag("type", lvl + 2);
-  if (node->type())
-    os() << node->type()->name();
-  else
-    os() << "auto";
-  closeTag("type", lvl + 2);
+  // return_type
+  openTag("return_type", lvl + 2);
+  os() << cdk::to_string(node->return_type());
+  closeTag("return_type", lvl + 2);
 
   // auto
   openTag("auto", lvl + 2);
   os() << (node->is_auto() ? "true" : "false");
   closeTag("auto", lvl + 2);
-
+  
   // identifier
   openTag("identifier", lvl + 2);
   os() << node->identifier();
@@ -323,7 +322,7 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
     default: os() << "unknown"; break;
   }
   closeTag("qualifier", lvl + 2);
-
+  
   // auto
   openTag("is_auto", lvl + 2);
   os() << (node->is_auto() ? "true" : "false");
@@ -332,10 +331,15 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
   // type
   openTag("type", lvl + 2);
   if (node->type())
-    os() << node->type()->name();
+    os() << node->type()->to_string();
   else
     os() << "undefined";
   closeTag("type", lvl + 2);
+  
+  
+  
+  
+
 
   // identifier
   openTag("identifier", lvl + 2);

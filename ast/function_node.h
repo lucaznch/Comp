@@ -46,7 +46,7 @@ namespace udf {
         bool _is_auto;
         cdk::sequence_node * _args;
         udf::block_node *_block;
-
+        std::shared_ptr<cdk::basic_type> _return_type;
 
     public:
 
@@ -73,7 +73,8 @@ namespace udf {
             _identifier(identifier),
             _is_auto(is_auto),
             _args(args),
-            _block(block) {
+            _block(block),
+            _return_type (return_type) {
                 if (!args) {
                     this->type(cdk::functional_type::create(return_type));
                 }
@@ -100,6 +101,7 @@ namespace udf {
 
         udf::block_node *block() { return _block; }
 
+        std::shared_ptr<cdk::basic_type> return_type(){return _return_type;}
 
         // Visitor pattern
         void accept(basic_ast_visitor *sp, int level) { sp->do_function_node(this, level); }

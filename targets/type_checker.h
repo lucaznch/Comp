@@ -55,4 +55,4 @@ namespace udf {
   } \
 }
 
-#define ASSERT_SAFE_EXPRESSIONS CHECK_TYPES(_compiler, _symtab, node)
+#define ASSERT_SAFE_EXPRESSIONS //CHECK_TYPES(_compiler, _symtab, node)

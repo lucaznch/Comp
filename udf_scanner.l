@@ -63,8 +63,9 @@ bool hex_to_int(int &val, const std::string &s) {
 "!="                   return tNE; 
 "&&"                   return tAND;
 "||"                   return tOR;
-"~"                    return tNOT;
 
+"&&"                    return tAND;
+"||"                    return tOR;
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
@@ -84,7 +85,7 @@ bool hex_to_int(int &val, const std::string &s) {
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
-[-()<>=+*/%;{}.]       return *yytext;
+[-()<>=+*/%;{}.~]       return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 
