@@ -210,6 +210,7 @@ void udf::xml_writer::do_if_else_node(udf::if_else_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_block_node(udf::block_node * const node, int lvl) {
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
 
   if (node->declarations()) {
@@ -228,27 +229,46 @@ void udf::xml_writer::do_block_node(udf::block_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
 
+  // qualifier as string
+  std::string qualifier;
+  switch (node->qualifier()) {
+    case 1: qualifier = "public"; break;
+    case 2: qualifier = "forward"; break;
+    default: qualifier = "private"; break;
+  }
   openTag("qualifier", lvl + 2);
-  os() << node->qualifier();
+  os() << qualifier;
   closeTag("qualifier", lvl + 2);
 
+  // type
   openTag("type", lvl + 2);
-  os() << node->type()->name(); 
+  if (node->type())
+    os() << node->type()->name();
+  else
+    os() << "auto";
   closeTag("type", lvl + 2);
 
+  // auto
+  openTag("auto", lvl + 2);
+  os() << (node->is_auto() ? "true" : "false");
+  closeTag("auto", lvl + 2);
+
+  // identifier
   openTag("identifier", lvl + 2);
   os() << node->identifier();
   closeTag("identifier", lvl + 2);
 
+  // arguments
   if (node->args()) {
     openTag("arguments", lvl + 2);
     node->args()->accept(this, lvl + 4);
     closeTag("arguments", lvl + 2);
   }
 
+  // block
   if (node->block()) {
     openTag("body", lvl + 2);
     node->block()->accept(this, lvl + 4);
@@ -258,23 +278,71 @@ void udf::xml_writer::do_function_node(udf::function_node * const node, int lvl)
   closeTag(node, lvl);
 }
 
-
-void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+void udf::xml_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
 
-  openTag("qualifier", lvl + 2);
-  os() << node->qualifier();
-  closeTag("qualifier", lvl + 2);
-
-  openTag("type", lvl + 2);
-  os() << node->type()->name(); 
-  closeTag("type", lvl + 2);
-
+  // identifier
   openTag("identifier", lvl + 2);
   os() << node->identifier();
   closeTag("identifier", lvl + 2);
 
+  // arguments
+  if (node->arguments()) {
+    openTag("arguments", lvl + 2);
+    node->arguments()->accept(this, lvl + 4);
+    closeTag("arguments", lvl + 2);
+  }
+
+  closeTag(node, lvl);
+}
+
+void udf::xml_writer::do_return_node(udf::return_node * const node, int lvl) {
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  if (node->retvalue()) {
+    openTag("value", lvl + 2);
+    node->retvalue()->accept(this, lvl + 4);
+    closeTag("value", lvl + 2);
+  }
+
+  closeTag(node, lvl);
+}
+
+void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  // qualifier
+  openTag("qualifier", lvl + 2);
+  switch (node->qualifier()) {
+    case 0: os() << "private"; break;
+    case 1: os() << "public"; break;
+    case 2: os() << "forward"; break;
+    default: os() << "unknown"; break;
+  }
+  closeTag("qualifier", lvl + 2);
+
+  // auto
+  openTag("is_auto", lvl + 2);
+  os() << (node->is_auto() ? "true" : "false");
+  closeTag("is_auto", lvl + 2);
+
+  // type
+  openTag("type", lvl + 2);
+  if (node->type())
+    os() << node->type()->name();
+  else
+    os() << "undefined";
+  closeTag("type", lvl + 2);
+
+  // identifier
+  openTag("identifier", lvl + 2);
+  os() << node->identifier();
+  closeTag("identifier", lvl + 2);
+
+  // initializer
   if (node->initializer()) {
     openTag("initializer", lvl + 2);
     node->initializer()->accept(this, lvl + 4);
@@ -283,26 +351,6 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
 
   closeTag(node, lvl);
 }
-
-
-void udf::xml_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
-
-}
-
-void udf::xml_writer::do_return_node(udf::return_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-
-  if (node->retvalue()) {
-    openTag("retvalue", lvl + 2);
-    node->retvalue()->accept(this, lvl + 4);
-    closeTag("retvalue", lvl + 2);
-  }
-
-  closeTag(node, lvl);
-}
-
-
 
 void udf::xml_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {
 }
@@ -353,13 +401,15 @@ void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
 }
 
 void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
-    ASSERT_SAFE_EXPRESSIONS;
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
 
+  // newline
   openTag("newline", lvl + 2);
-  os() << !!node->newline();  // prints 0 or 1
+  os() << (node->newline() ? "true" : "false");
   closeTag("newline", lvl + 2);
 
+  // arguments
   if (node->arguments()) {
     openTag("arguments", lvl + 2);
     node->arguments()->accept(this, lvl + 4);

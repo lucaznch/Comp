@@ -11,11 +11,16 @@
 // don't change this
 #define yyerror LexerError
 %}
-%x X_STRING
+%x X_COMMENT X_STRING
 %%
   yydebug=1; set_debug(1);
 
-"--".*                 ; /* ignore comments */
+"//".*                 ;                          /* ignore comments */
+
+"/*"                   yy_push_state(X_COMMENT);  /* enter comment */
+<X_COMMENT>"*/"        yy_pop_state();            /* exit comment */
+<X_COMMENT>"/*"        yy_push_state(X_COMMENT);  /* nested comment */
+<X_COMMENT>.|\n        ;                          /* ignore comment content */
 
 "int"                  return tTYPE_INT;
 "real"                 return tTYPE_REAL;
@@ -48,11 +53,12 @@
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
-\"                     yy_push_state(X_STRING); yylval.s = new std::string("");
-<X_STRING>\"           yy_pop_state(); return tSTRING;
-<X_STRING>\\\"         *yylval.s += yytext + 1;
-<X_STRING>.            *yylval.s += yytext;
-<X_STRING>\n           yyerror("newline in string");
+\"                      yy_push_state(X_STRING); yylval.s = new std::string(""); // enter string
+<X_STRING>\"            yy_pop_state(); return tSTRING; // exit string
+<X_STRING>\\\"          *yylval.s += '\"';              // escaped quote
+<X_STRING>\\.           *yylval.s += yytext[1];         // handle common escapes
+<X_STRING>\n            yyerror("newline in string");   // disallow newline in string
+<X_STRING>.             *yylval.s += *yytext;           // regular character
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
