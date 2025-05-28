@@ -372,6 +372,9 @@ void udf::xml_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
+  openTag(node, lvl);
+  node->argument()->accept(this, lvl + 2);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_for_node(udf::for_node * const node, int lvl) {
