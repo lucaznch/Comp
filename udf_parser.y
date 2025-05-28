@@ -59,7 +59,7 @@
 %nonassoc tUNARY 
 
 %type <node> program arg declr instr elif 
-%type <sequence> exprs args declrs instrs opt_declrs opt_exprs
+%type <sequence> exprs args declrs instrs opt_exprs
 %type <expression> expr
 %type <lvalue> lval
 %type <block> blck
@@ -206,6 +206,9 @@ instr : expr ';'              { $$ = new udf::evaluation_node(LINE, $1); }
                               { $$ = new udf::if_else_node(LINE, $3, $5, $6); }
         | blck {$$ = $1;}
         | for   {$$ = $1;}
+        | tCONTINUE {$$ = new udf::continue_node(LINE);}
+        | tBREAK {$$ = new udf::break_node(LINE);}
+
       ;
 
 elif : tELSE instr            { $$ = $2; }
@@ -216,12 +219,10 @@ elif : tELSE instr            { $$ = $2; }
       ;
 
 for
-        : tFOR '(' opt_declrs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
-        | tFOR '(' opt_exprs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
+        : tFOR '(' declrs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
+        | tFOR '(' exprs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
+        | tFOR '('  ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,nullptr,$4,$6,$8);}
 
-opt_declrs
-        : declrs {$$ = $1;}
-        |       {$$ = nullptr;}
 opt_exprs
         : exprs {$$ = $1;}
         |       {$$ = nullptr;}

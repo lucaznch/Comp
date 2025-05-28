@@ -405,9 +405,13 @@ void udf::xml_writer::do_for_node(udf::for_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_continue_node(udf::continue_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_break_node(udf::break_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_capacity_node(udf::capacity_node * const node, int lvl) {
