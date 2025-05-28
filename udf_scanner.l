@@ -49,6 +49,9 @@
 "<="                   return tLE; 
 "=="                   return tEQ; 
 "!="                   return tNE; 
+"&&"                   return tAND;
+"||"                   return tOR;
+"~"                    return tNOT;
 
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
@@ -66,6 +69,6 @@
 
 [ \t\n]+               ; /* ignore whitespace */
 
-.                      yyerror("Unknown character");
+.                      fprintf(stderr, "'%s'\t", yytext); yyerror("Unknown character"); 
 
 %%
