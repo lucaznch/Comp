@@ -194,13 +194,12 @@ instr : expr ';'              { $$ = new udf::evaluation_node(LINE, $1); }
       | tRETURN ';'           { $$ = new udf::return_node(LINE, nullptr); }
       | tIF '(' expr ')' instr %prec tIFX
                               { $$ = new udf::if_node(LINE, $3, $5); }
-      | tIF '(' expr ')' instr tELSE instr
-                              { $$ = new udf::if_else_node(LINE, $3, $5, $7); }
       | tIF '(' expr ')' instr elif
                               { $$ = new udf::if_else_node(LINE, $3, $5, $6); }
       ;
 
-elif : tELIF '(' expr ')' instr %prec tIFX
+elif : tELSE instr            { $$ = $2; }
+      | tELIF '(' expr ')' instr %prec tIFX
                               { $$ = new udf::if_node(LINE, $3, $5); }
       | tELIF '(' expr ')' instr elif
                               { $$ = new udf::if_else_node(LINE, $3, $5, $6); }
