@@ -25,6 +25,7 @@
   //-- don't change *any* of these --- END!
 
   int                   i;          /* integer value */
+  double                d;          /* double value */
   std::string          *s;          /* symbol name or string literal */
   cdk::basic_node      *node;       /* node pointer */
   cdk::sequence_node   *sequence;
@@ -34,12 +35,14 @@
 };
 
 %token <i> tINTEGER
+%token <d> tREAL
 %token <s> tIDENTIFIER tSTRING
 %token tIF
 %token tTYPE_INT tTYPE_REAL tTYPE_STRING tTYPE_VOID
 %token tPUBLIC tFORWARD tAUTO
 %token tFOR tBREAK tCONTINUE tRETURN
 %token tINPUT
+%token tSIZEOF
 %token tWRITE tWRITELN
 %token tAND tOR
 
@@ -71,6 +74,7 @@ program : declrs { compiler->ast(new udf::program_node(LINE, $1)); }
         ;
 
 expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
+     | tREAL                 { $$ = new cdk::double_node(LINE, $1); }
      | string                { $$ = new cdk::string_node(LINE, $1); delete $1; }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
@@ -89,6 +93,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | expr tNE expr         { $$ = new cdk::ne_node(LINE, $1, $3); }
      | expr tEQ expr         { $$ = new cdk::eq_node(LINE, $1, $3); }
      | '(' expr ')'          { $$ = $2; }
+     | tSIZEOF '(' expr ')'  { $$ = new udf::size_of_node(LINE, $3); }
      | lval                  { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }
      ;
