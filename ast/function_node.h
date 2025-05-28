@@ -43,7 +43,6 @@ namespace udf {
     class function_node: public cdk::typed_node {
         int _qualifier;    // 0 = private, 1 = public, 2 = forward
         std::string _identifier;
-        bool _is_auto;
         cdk::sequence_node * _args;
         udf::block_node *_block;
         std::shared_ptr<cdk::basic_type> _return_type;
@@ -56,7 +55,6 @@ namespace udf {
          * @param lineno the source code line number that originated the node
          * @param qualifier the qualifier of the function
          * @param identifier the name of the function
-         * @param is_auto true if it is an auto function, false otherwise
          * @param args the arguments of the function
          * @param return_type the return type of the function
          * @param block the block of code in the function
@@ -64,14 +62,12 @@ namespace udf {
         function_node(int lineno,
                 int qualifier,
                 const std::string &identifier,
-                bool is_auto,
                 cdk::sequence_node *args,
                 std::shared_ptr<cdk::basic_type> return_type,
                 udf::block_node *block) :
             cdk::typed_node(lineno),
             _qualifier(qualifier),
             _identifier(identifier),
-            _is_auto(is_auto),
             _args(args),
             _block(block),
             _return_type (return_type) {
@@ -95,7 +91,7 @@ namespace udf {
 
         // bool is_main() { return _identifier == "udf" && (!_args || _args->size() == 0); }
 
-        bool is_auto() { return _is_auto; }
+        bool is_auto() { return _return_type->name() == cdk::TYPE_UNSPEC; }
 
         cdk::sequence_node *args() { return _args; }
 

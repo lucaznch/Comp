@@ -18,7 +18,6 @@ namespace udf {
     class var_declaration_node : public cdk::typed_node {
         int _qualifier;  // 0 = private, 1 = public, 2 = forward
         std::string _identifier;
-        bool _is_auto;
         cdk::expression_node *_initializer;
 
         
@@ -26,13 +25,11 @@ namespace udf {
         var_declaration_node(int lineno,
                             int qualifier,
                             const std::string &identifier,
-                            bool is_auto,
                             std::shared_ptr<cdk::basic_type> type,
                             cdk::expression_node *initializer = nullptr) :
             cdk::typed_node(lineno),
             _qualifier(qualifier),
             _identifier(identifier),
-            _is_auto(is_auto),
             _initializer(initializer) {
                 this->type(type);
         }
@@ -42,7 +39,7 @@ namespace udf {
 
         const std::string &identifier() const { return _identifier; }
 
-        bool is_auto() const { return _is_auto; }
+        bool is_auto()  { return this->type()->name() == cdk::TYPE_UNSPEC; }
 
         cdk::expression_node *initializer() const { return _initializer; }
 

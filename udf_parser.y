@@ -97,6 +97,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | '(' expr ')'          { $$ = $2; }
      | tSIZEOF '(' expr ')'  { $$ = new udf::size_of_node(LINE, $3); }
      | tIDENTIFIER '(' ')'   { $$ = new udf::function_call_node(LINE, *$1, nullptr); delete $1; }
+     | tIDENTIFIER '(' exprs ')'   { $$ = new udf::function_call_node(LINE, *$1, $3); delete $1; }
      | lval                  { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }
      ;
@@ -118,7 +119,7 @@ type : tTYPE_INT    { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      | tTYPE_VOID   { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID); }
      ;
 
-arg : type tIDENTIFIER { $$ = new udf::var_declaration_node(LINE, 0, *$2, false, $1, nullptr); }
+arg : type tIDENTIFIER { $$ = new udf::var_declaration_node(LINE, 0, *$2, $1, nullptr); }
     ;
 
 args : args ',' arg { $$ = new cdk::sequence_node(LINE, $3, $1); }
@@ -136,58 +137,42 @@ declrs : declrs declr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        ; 
 
 declr : type tIDENTIFIER                    ';'
-               { $$ = new udf::var_declaration_node(LINE, 0, *$2, false, $1, nullptr); delete $2; }
+               { $$ = new udf::var_declaration_node(LINE, 0, *$2, $1, nullptr); delete $2; }
        | type tIDENTIFIER '=' expr           ';'
-               { $$ = new udf::var_declaration_node(LINE, 0, *$2, false, $1, $4); delete $2; }
+               { $$ = new udf::var_declaration_node(LINE, 0, *$2, $1, $4); delete $2; }
        | tPUBLIC type tIDENTIFIER            ';'
-               { $$ = new udf::var_declaration_node(LINE, 1, *$3, false, $2, nullptr); delete $3; }
+               { $$ = new udf::var_declaration_node(LINE, 1, *$3, $2, nullptr); delete $3; }
        | tPUBLIC type tIDENTIFIER '=' expr   ';'
-               { $$ = new udf::var_declaration_node(LINE, 1, *$3, false, $2, $5); delete $3; }
+               { $$ = new udf::var_declaration_node(LINE, 1, *$3, $2, $5); delete $3; }
        | tFORWARD type tIDENTIFIER           ';'
-               { $$ = new udf::var_declaration_node(LINE, 2, *$3, false, $2, nullptr); delete $3; }
+               { $$ = new udf::var_declaration_node(LINE, 2, *$3, $2, nullptr); delete $3; }
        | tFORWARD type tIDENTIFIER '=' expr  ';'
-               { $$ = new udf::var_declaration_node(LINE, 2, *$3, false, $2, $5); delete $3; }
+               { $$ = new udf::var_declaration_node(LINE, 2, *$3, $2, $5); delete $3; }
        | tAUTO tIDENTIFIER '=' expr          ';'
-               { $$ = new udf::var_declaration_node(LINE, 0, *$2, true, nullptr, $4); delete $2; }
+               { $$ = new udf::var_declaration_node(LINE, 0, *$2, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $4); delete $2; }
        | tPUBLIC tAUTO tIDENTIFIER '=' expr  ';'
-               { $$ = new udf::var_declaration_node(LINE, 1, *$3, true, nullptr, $5); delete $3; }
+               { $$ = new udf::var_declaration_node(LINE, 1, *$3, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $5); delete $3; }
        | type tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, false, nullptr, $1, $5); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, nullptr, $1, $5); delete $2; }
        | type tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, false, $4, $1, $6); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, $4, $1, $6); delete $2; }
        | tPUBLIC type tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, false, nullptr, $2, $6); delete $3; }
+               { $$ = new udf::function_node(LINE, 1, *$3, nullptr, $2, $6); delete $3; }
        | tPUBLIC type tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, false, $5, $2, $7); delete $3; }
-       | tFORWARD type tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, false, nullptr, $2, $6); delete $3; }
-       | tFORWARD type tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, false, $5, $2, $7); delete $3; }
+               { $$ = new udf::function_node(LINE, 1, *$3, $5, $2, $7); delete $3; }
        | tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $5); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $5); delete $2; }
        | tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, true, $4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, $4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $2; }
        | tPUBLIC tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $3; }
+               { $$ = new udf::function_node(LINE, 1, *$3, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $3; }
        | tPUBLIC tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, true, $5, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $7); delete $3; }
-       | tFORWARD tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $3; }
-       | tFORWARD tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, true, $5, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $7); delete $3; }
-               // void can be omitted
-       | tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$1, false, nullptr, cdk::primitive_type::create(0, cdk::TYPE_VOID), $4); delete $1; }
-       | tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$1, false, $3, cdk::primitive_type::create(0, cdk::TYPE_VOID), $5); delete $1; }
-       | tPUBLIC tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$2, false, nullptr, cdk::primitive_type::create(0, cdk::TYPE_VOID), $5); delete $2; }
-       | tPUBLIC tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$2, false, $4, cdk::primitive_type::create(0, cdk::TYPE_VOID), $6); delete $2; }
-       | tFORWARD tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$2, false, nullptr, cdk::primitive_type::create(0, cdk::TYPE_VOID), $5); delete $2; }
-       | tFORWARD tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$2, false, $4, cdk::primitive_type::create(0, cdk::TYPE_VOID), $6); delete $2; }
+               { $$ = new udf::function_node(LINE, 1, *$3, $5, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $7); delete $3; }
+        | tFORWARD type tIDENTIFIER '(' args ')'
+               { $$ = new udf::function_node(LINE, 2, *$3, $5, $2, nullptr); delete $3; }
+        | tFORWARD type tIDENTIFIER '(' ')'
+        { $$ = new udf::function_node(LINE, 2, *$3, nullptr, $2, nullptr); delete $3; }
+
        ;
 
 instrs : instrs instr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
