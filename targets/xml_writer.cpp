@@ -375,6 +375,33 @@ void udf::xml_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_for_node(udf::for_node * const node, int lvl) {
+  openTag(node, lvl);
+
+  if (node->inits()) {
+    openTag("init", lvl + 2);
+    node->inits()->accept(this, lvl + 4);
+    closeTag("init", lvl + 2);
+  }
+
+  if (node->conditions()) {
+    openTag("condition", lvl + 2);
+    node->conditions()->accept(this, lvl + 4);
+    closeTag("condition", lvl + 2);
+  }
+
+  if (node->steps()) {
+    openTag("step", lvl + 2);
+    node->steps()->accept(this, lvl + 4);
+    closeTag("step", lvl + 2);
+  }
+
+  if (node->instr()) {
+    openTag("instruction", lvl + 2);
+    node->instr()->accept(this, lvl + 4);
+    closeTag("instruction", lvl + 2);
+  }
+
+  closeTag(node, lvl); 
 }
 
 void udf::xml_writer::do_continue_node(udf::continue_node * const node, int lvl) {

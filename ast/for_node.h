@@ -5,30 +5,30 @@
 namespace udf {
 
 class for_node : public cdk::basic_node {
-    cdk::expression_node* _init;
-    cdk::expression_node* _condition;
-    cdk::expression_node* _step;
-    block_node* _block;
+    cdk::sequence_node* _inits;
+    cdk::sequence_node* _conditions;
+    cdk::sequence_node* _steps;
+    basic_node* _instr;
 
 public:
-    for_node(int lineno, cdk::expression_node* init, cdk::expression_node* condition,
-             cdk::expression_node* step, block_node* block)
-        : cdk::basic_node(lineno), _init(init), _condition(condition), _step(step), _block(block) {}
+    for_node(int lineno, cdk::sequence_node* inits, cdk::sequence_node* conditions,
+             cdk::sequence_node* steps, basic_node* instr)
+        : cdk::basic_node(lineno), _inits(inits), _conditions(conditions), _steps(steps), _instr(instr) {}
 
-    cdk::expression_node* init() {
-        return _init;
+    cdk::sequence_node* inits() {
+        return _inits;
     }
 
-    cdk::expression_node* condition() {
-        return _condition;
+    cdk::sequence_node* conditions() {
+        return _conditions;
     }
 
-    cdk::expression_node* step() {
-        return _step;
+    cdk::sequence_node* steps() {
+        return _steps;
     }
 
-    block_node* block() {
-        return _block;
+    basic_node* instr() {
+        return _instr;
     }
 
     void accept(basic_ast_visitor* sp, int level) {

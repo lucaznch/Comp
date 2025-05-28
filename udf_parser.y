@@ -32,6 +32,7 @@
   cdk::expression_node *expression; /* expression nodes */
   cdk::lvalue_node     *lvalue;
   udf::block_node      *block;
+  udf::for_node      *loop;
 };
 
 %token <i> tINTEGER
@@ -57,11 +58,12 @@
 %left '*' '/' '%'
 %nonassoc tUNARY 
 
-%type <node> program arg declr instr elif
-%type <sequence> exprs args declrs instrs
+%type <node> program arg declr instr elif 
+%type <sequence> exprs args declrs instrs opt_declrs opt_exprs
 %type <expression> expr
 %type <lvalue> lval
 %type <block> blck
+%type <loop> for
 %type <type> type
 %type <s> string 
 
@@ -125,6 +127,7 @@ args : args ',' arg { $$ = new cdk::sequence_node(LINE, $3, $1); }
 blck : '{' declrs instrs '}' { $$ = new udf::block_node(LINE, $2, $3); }
      | '{' declrs '}' { $$ = new udf::block_node(LINE, $2, nullptr); }
      | '{' instrs '}' { $$ = new udf::block_node(LINE, nullptr, $2); }
+     | '{' '}'  { $$ = new udf::block_node(LINE, nullptr, nullptr); }
      ;
 
 declrs : declrs declr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
@@ -201,6 +204,8 @@ instr : expr ';'              { $$ = new udf::evaluation_node(LINE, $1); }
                               { $$ = new udf::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr elif
                               { $$ = new udf::if_else_node(LINE, $3, $5, $6); }
+        | blck {$$ = $1;}
+        | for   {$$ = $1;}
       ;
 
 elif : tELSE instr            { $$ = $2; }
@@ -210,4 +215,20 @@ elif : tELSE instr            { $$ = $2; }
                               { $$ = new udf::if_else_node(LINE, $3, $5, $6); }
       ;
 
+for
+        : tFOR '(' opt_declrs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
+        | tFOR '(' opt_exprs ';' opt_exprs ';' opt_exprs')' instr {$$ = new udf::for_node(LINE,$3,$5,$7,$9);}
+
+opt_declrs
+        : declrs {$$ = $1;}
+        |       {$$ = nullptr;}
+opt_exprs
+        : exprs {$$ = $1;}
+        |       {$$ = nullptr;}
+/*
+qualifier : tPUBLIC {$$ = 1;}
+            |tFORWARD {$$ = 2;}
+            |/* EMPTY  {$$ =0;}
+            ;
+*/
 %%
