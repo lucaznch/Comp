@@ -97,7 +97,7 @@ bool num_to_real(double &val, const std::string &s) {
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
-[-()<>=+*/%;{}.~]       return *yytext;
+[-()<>=+*/%;{}.~,]       return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 
