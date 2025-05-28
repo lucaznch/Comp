@@ -46,10 +46,10 @@
 %nonassoc tELIF tELSE
 
 %right '='
-%left tGE tLE tEQ tNE '>' '<'
+%left tGE tLE tEQ tNE '>' '<' tAND tOR
 %left '+' '-'
 %left '*' '/' '%'
-%nonassoc tUNARY
+%nonassoc tUNARY tNOT
 
 %type <node> program arg declr instr
 %type <sequence> exprs args declrs instrs
@@ -71,6 +71,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | string                { $$ = new cdk::string_node(LINE, $1); delete $1; }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
+     | tNOT expr             { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr         { $$ = new cdk::sub_node(LINE, $1, $3); }
      | expr '*' expr         { $$ = new cdk::mul_node(LINE, $1, $3); }
