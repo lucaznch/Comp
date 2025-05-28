@@ -21,7 +21,16 @@ bool hex_to_int(int &val, const std::string &s) {
     return false;
   }
 }
-
+bool num_to_real(double &val, const std::string &s) {
+  try {
+    val = std::stod(s);
+    return true;
+  } catch (std::invalid_argument &e) {
+    return false;
+  } catch (std::out_of_range &e) {
+    return false;
+  }
+}
 %}
 %x X_COMMENT X_STRING
 %%
@@ -49,6 +58,8 @@ bool hex_to_int(int &val, const std::string &s) {
 "return"               return tRETURN;
 
 "input"                return tINPUT;
+
+"sizeof"               return tSIZEOF;
 
 "write"                return tWRITE;
 "writeln"              return tWRITELN;
@@ -80,6 +91,9 @@ bool hex_to_int(int &val, const std::string &s) {
   }
   return tINTEGER;
 }
+
+[0-9]+\.[0-9]+([eE][-]?[0-9]+)?   if (!num_to_real(yylval.d, yytext)) yyerror("Value out of range"); return tREAL;
+[0-9]+[eE][-]?[0-9]+               if (!num_to_real(yylval.d, yytext)) yyerror("Value out of range"); return tREAL;
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
