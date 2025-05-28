@@ -149,17 +149,17 @@ declr : type tIDENTIFIER                    ';'
        | tFORWARD type tIDENTIFIER '(' args ')' blck
                { $$ = new udf::function_node(LINE, 2, *$3, false, $5, $2, $7); delete $3; }
        | tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, true, nullptr, nullptr, $5); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $5); delete $2; }
        | tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 0, *$2, true, $4, nullptr, $6); delete $2; }
+               { $$ = new udf::function_node(LINE, 0, *$2, true, $4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $2; }
        | tPUBLIC tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, true, nullptr, nullptr, $6); delete $3; }
+               { $$ = new udf::function_node(LINE, 1, *$3, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $3; }
        | tPUBLIC tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 1, *$3, true, $5, nullptr, $7); delete $3; }
+               { $$ = new udf::function_node(LINE, 1, *$3, true, $5, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $7); delete $3; }
        | tFORWARD tAUTO tIDENTIFIER '(' ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, true, nullptr, nullptr, $6); delete $3; }
+               { $$ = new udf::function_node(LINE, 2, *$3, true, nullptr, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $6); delete $3; }
        | tFORWARD tAUTO tIDENTIFIER '(' args ')' blck
-               { $$ = new udf::function_node(LINE, 2, *$3, true, $5, nullptr, $7); delete $3; }
+               { $$ = new udf::function_node(LINE, 2, *$3, true, $5, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), $7); delete $3; }
                // void can be omitted
        | tIDENTIFIER '(' ')' blck
                { $$ = new udf::function_node(LINE, 0, *$1, false, nullptr, cdk::primitive_type::create(0, cdk::TYPE_VOID), $4); delete $1; }
