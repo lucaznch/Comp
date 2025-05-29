@@ -11,20 +11,6 @@ void udf::xml_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
 void udf::xml_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
-void udf::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  // EMPTY
-}
-void udf::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
-    openTag(node, lvl);
-  node->argument()->accept(this, lvl + 2);
-  closeTag(node, lvl);
-}
-void udf::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
-  // EMPTY
-}
-void udf::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
-  // EMPTY
-}
 
 //---------------------------------------------------------------------------
 
@@ -45,6 +31,9 @@ void udf::xml_writer::do_string_node(cdk::string_node * const node, int lvl) {
   process_literal(node, lvl);
 }
 
+void udf::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
+  process_literal(node, lvl);
+}
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_unary_operation(cdk::unary_operation_node * const node, int lvl) {
@@ -62,6 +51,21 @@ void udf::xml_writer::do_unary_plus_node(cdk::unary_plus_node * const node, int 
   do_unary_operation(node, lvl);
 }
 
+void udf::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
+  do_unary_operation(node, lvl);
+}
+
+void udf::xml_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
+  do_unary_operation(node, lvl);
+}
+
+void udf::xml_writer::do_address_of_node(udf::address_of_node * const node, int lvl) {
+ do_unary_operation(node, lvl);
+}
+
+void udf::xml_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
+ do_unary_operation(node, lvl);
+}
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_binary_operation(cdk::binary_operation_node * const node, int lvl) {
@@ -106,6 +110,13 @@ void udf::xml_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
   do_binary_operation(node, lvl);
 }
 
+
+void udf::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
+  do_binary_operation(node, lvl);
+}
+void udf::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
+  do_binary_operation(node, lvl);
+}
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
@@ -210,6 +221,24 @@ void udf::xml_writer::do_if_else_node(udf::if_else_node * const node, int lvl) {
 }
 
 //---------------------------------------------------------------------------
+void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
+  // TODO: ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+
+  // newline
+  openTag("newline", lvl + 2);
+  os() << (node->newline() ? "true" : "false");
+  closeTag("newline", lvl + 2);
+
+  // arguments
+  if (node->arguments()) {
+    openTag("arguments", lvl + 2);
+    node->arguments()->accept(this, lvl + 4);
+    closeTag("arguments", lvl + 2);
+  }
+
+  closeTag(node, lvl);
+}
 
 void udf::xml_writer::do_block_node(udf::block_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
@@ -357,24 +386,15 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
 }
 
 void udf::xml_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {
-}
+    os() << std::string(lvl, ' ') << "<" << node->label() << ">" <<  "</" << node->label() << ">" << std::endl;
 
-void udf::xml_writer::do_address_of_node(udf::address_of_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_index_node(udf::index_node * const node, int lvl) {
-}
-
-void udf::xml_writer::do_input_node(udf::input_node * const node, int lvl) {
-}
-
-void udf::xml_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
-}
-
-void udf::xml_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
-  openTag(node, lvl);
-  node->argument()->accept(this, lvl + 2);
-  closeTag(node, lvl);
+  openTag("index", lvl);
+  node->base()->accept(this, lvl + 2);
+  node->index()->accept(this, lvl + 2);
+  closeTag("index", lvl);
 }
 
 void udf::xml_writer::do_for_node(udf::for_node * const node, int lvl) {
@@ -417,6 +437,8 @@ void udf::xml_writer::do_break_node(udf::break_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 
+//---------------------------------------------------------------------------
+
 void udf::xml_writer::do_capacity_node(udf::capacity_node * const node, int lvl) {
 }
 
@@ -438,21 +460,5 @@ void udf::xml_writer::do_contraction_node(udf::contraction_node * const node, in
 void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
 }
 
-void udf::xml_writer::do_write_node(udf::write_node * const node, int lvl) {
-  // TODO: ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-
-  // newline
-  openTag("newline", lvl + 2);
-  os() << (node->newline() ? "true" : "false");
-  closeTag("newline", lvl + 2);
-
-  // arguments
-  if (node->arguments()) {
-    openTag("arguments", lvl + 2);
-    node->arguments()->accept(this, lvl + 4);
-    closeTag("arguments", lvl + 2);
-  }
-
-  closeTag(node, lvl);
+void udf::xml_writer::do_input_node(udf::input_node * const node, int lvl) {
 }

@@ -75,7 +75,9 @@ bool num_to_real(double &val, const std::string &s) {
 "&&"                   return tAND;
 "||"                   return tOR;
 
-
+"objects"              return tOBJECTS;
+"ptr"                  return tTYPE_POINTER;
+"nullptr"              return tNULLPTR;
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
 \"                      yy_push_state(X_STRING); yylval.s = new std::string(""); // enter string
@@ -97,7 +99,7 @@ bool num_to_real(double &val, const std::string &s) {
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
-[-()<>=+*/%;{}.~,]       return *yytext;
+[-()<>=+*/%;{}.~,[\]?]       return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 
