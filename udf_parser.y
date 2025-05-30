@@ -46,7 +46,7 @@
 %token tSIZEOF
 %token tWRITE tWRITELN
 %token tAND tOR
-%token tCONTRACTION tDIM tRESHAPE tRANK
+%token tCONTRACTION tDIM tRESHAPE tRANK tCAPACITY
 %token tOBJECTS tNULLPTR
 %nonassoc tIFX
 %nonassoc tELIF tELSE
@@ -89,6 +89,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | tIDENTIFIER tDIM '(' expr ')' { $$ = new udf::dims_node(LINE, $4); }
      | expr '?'                 {$$ = new udf::address_of_node(LINE, $1);}
      | tOBJECTS  '(' expr ')' { $$ = new udf::malloc_node(LINE, $3);}
+     | tINPUT { $$ = new udf::input_node(LINE); }
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr         { $$ = new cdk::sub_node(LINE, $1, $3); }
      | expr '*' expr         { $$ = new cdk::mul_node(LINE, $1, $3); }

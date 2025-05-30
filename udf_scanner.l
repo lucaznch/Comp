@@ -83,6 +83,7 @@ bool num_to_real(double &val, const std::string &s) {
 ".dim"                 return tDIM;
 ".reshape"             return tRESHAPE;
 ".rank"                return tRANK;
+".capacity"            return tCAPACITY;
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 

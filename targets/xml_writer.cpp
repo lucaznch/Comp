@@ -440,25 +440,52 @@ void udf::xml_writer::do_break_node(udf::break_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_capacity_node(udf::capacity_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_rank_node(udf::rank_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_dims_node(udf::dims_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_tensor_indexation_node(udf::tensor_indexation_node * const node, int lvl) {
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_reshape_node(udf::reshape_node * const node, int lvl){
+  openTag(node, lvl);
+
+
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_contraction_node(udf::contraction_node * const node, int lvl){
+  openTag(node, lvl);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
+  openTag(node, lvl);
+
+  // nested_sequences
+  if (node->nested_sequences()) {
+    openTag("nested_sequences", lvl + 2);
+    node->nested_sequences()->accept(this, lvl + 4);
+    closeTag("nested_sequences", lvl + 2);
+  }
+
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_input_node(udf::input_node * const node, int lvl) {
+  openTag(node, lvl);
+
+  closeTag(node, lvl);
 }
