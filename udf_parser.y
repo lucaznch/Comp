@@ -39,13 +39,14 @@
 %token <d> tREAL
 %token <s> tIDENTIFIER tSTRING
 %token tIF
-%token tTYPE_INT tTYPE_REAL tTYPE_STRING tTYPE_VOID tTYPE_POINTER 
+%token tTYPE_INT tTYPE_REAL tTYPE_STRING tTYPE_VOID tTYPE_POINTER tTYPE_TENSOR
 %token tPUBLIC tFORWARD tAUTO
 %token tFOR tBREAK tCONTINUE tRETURN
 %token tINPUT
 %token tSIZEOF
 %token tWRITE tWRITELN
 %token tAND tOR
+%token tCONTRACTION
 %token tOBJECTS tNULLPTR
 %nonassoc tIFX
 %nonassoc tELIF tELSE
@@ -56,12 +57,13 @@
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
-%left '[' ']'
+%left '[' ']' 
+%left '?'
 %nonassoc tUNARY 
 
-%type <node> program arg declr instr elif fn_declr var_declr 
-%type <sequence> exprs args declrs instrs opt_exprs opt_loop_declrs var_declrs
-%type <expression> expr
+%type <node> program arg declr instr elif fn_declr var_declr
+%type <sequence> exprs args declrs instrs opt_exprs opt_loop_declrs var_declrs dims
+%type <expression> expr dim
 %type <lvalue> lval
 %type <block> blck
 %type <loop> for
@@ -83,7 +85,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
      | '~' expr %prec tUNARY   {$$ = new cdk::not_node(LINE, $2);}
-     | expr '?' %prec tUNARY  {$$ = new udf::address_of_node(LINE, $1);}
+     | expr '?'                 {$$ = new udf::address_of_node(LINE, $1);}
      | tOBJECTS  '(' expr ')' { $$ = new udf::malloc_node(LINE, $3);}
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr         { $$ = new cdk::sub_node(LINE, $1, $3); }
@@ -123,7 +125,34 @@ type : tTYPE_INT    { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      | tTYPE_STRING { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
      | tTYPE_VOID   { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID); }
      | tTYPE_POINTER '<' type '>' { $$ = cdk::reference_type::create(4, $3); }
-     | tTYPE_POINTER '<' tAUTO '>' { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)); }
+     | tTYPE_POINTER '<' tAUTO '>' { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)); }  
+     | tTYPE_TENSOR '<' dims '>' 
+     {    
+          std::vector<size_t> dimensions;
+      
+          auto seq = dynamic_cast<cdk::sequence_node*>($3);
+          if (seq) {
+              for (size_t i = 0; i < seq->size(); ++i) {
+                  auto dim_node = dynamic_cast<cdk::integer_node*>(seq->node(i));
+                  if (dim_node) {
+                      dimensions.push_back(dim_node->value());
+                  } else {
+                      printf("Error: Invalid dimension in tensor type\n");
+                  }
+              }
+          }
+          $$ = cdk::tensor_type::create(dimensions);
+     }  
+     ;
+
+
+
+
+dim : tINTEGER { $$ = new cdk::integer_node(LINE, $1); }
+    ;
+
+dims : dims ',' dim { $$ = new cdk::sequence_node(LINE, $3, $1); }
+     | dim          { $$ = new cdk::sequence_node(LINE, $1); }
      ;
 
 arg : type tIDENTIFIER { $$ = new udf::var_declaration_node(LINE, 0, *$2, $1, nullptr); }

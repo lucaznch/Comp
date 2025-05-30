@@ -47,6 +47,8 @@ bool num_to_real(double &val, const std::string &s) {
 "real"                 return tTYPE_REAL;
 "string"               return tTYPE_STRING;
 "void"                 return tTYPE_VOID;
+"ptr"                  return tTYPE_POINTER;
+"tensor"               return tTYPE_TENSOR;
 
 "public"               return tPUBLIC;
 "forward"              return tFORWARD;
@@ -59,6 +61,8 @@ bool num_to_real(double &val, const std::string &s) {
 
 "input"                return tINPUT;
 
+"objects"              return tOBJECTS;
+"nullptr"              return tNULLPTR;
 "sizeof"               return tSIZEOF;
 
 "write"                return tWRITE;
@@ -75,9 +79,8 @@ bool num_to_real(double &val, const std::string &s) {
 "&&"                   return tAND;
 "||"                   return tOR;
 
-"objects"              return tOBJECTS;
-"ptr"                  return tTYPE_POINTER;
-"nullptr"              return tNULLPTR;
+"**"                   return tCONTRACTION;
+
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
 \"                      yy_push_state(X_STRING); yylval.s = new std::string(""); // enter string
