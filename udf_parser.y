@@ -59,6 +59,7 @@
 %left '*' '/' '%'
 %left '[' ']' 
 %left '?'
+%left tCONTRACTION
 %nonassoc tUNARY 
 
 %type <node> program arg declr instr elif fn_declr var_declr
@@ -100,6 +101,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | expr tLE expr         { $$ = new cdk::le_node(LINE, $1, $3); }
      | expr tNE expr         { $$ = new cdk::ne_node(LINE, $1, $3); }
      | expr tEQ expr         { $$ = new cdk::eq_node(LINE, $1, $3); }
+     | expr tCONTRACTION expr { $$ = new udf::contraction_node(LINE, $1, $3); }
      | '(' expr ')'          { $$ = $2; }
      | tSIZEOF '(' expr ')'  { $$ = new udf::size_of_node(LINE, $3); }
      | tIDENTIFIER '(' ')'   { $$ = new udf::function_call_node(LINE, *$1, nullptr); delete $1; }
