@@ -80,6 +80,9 @@ bool num_to_real(double &val, const std::string &s) {
 "||"                   return tOR;
 
 "**"                   return tCONTRACTION;
+".dim"                 return tDIM;
+".reshape"             return tRESHAPE;
+".rank"                return tRANK;
 
 [A-Za-z][A-Za-z0-9_]*  yylval.s = new std::string(yytext); return tIDENTIFIER;
 
@@ -102,7 +105,7 @@ bool num_to_real(double &val, const std::string &s) {
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
-[-()<>=+*/%;{}.~,[\]?]       return *yytext;
+[-()<>=+*/%;{}.~,[\]?@]       return *yytext;
 
 [ \t\n]+               ; /* ignore whitespace */
 

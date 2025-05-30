@@ -46,7 +46,7 @@
 %token tSIZEOF
 %token tWRITE tWRITELN
 %token tAND tOR
-%token tCONTRACTION
+%token tCONTRACTION tDIM tRESHAPE tRANK
 %token tOBJECTS tNULLPTR
 %nonassoc tIFX
 %nonassoc tELIF tELSE
@@ -86,6 +86,7 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
      | '~' expr %prec tUNARY   {$$ = new cdk::not_node(LINE, $2);}
+     | tIDENTIFIER tDIM '(' expr ')' { $$ = new udf::dims_node(LINE, $4); }
      | expr '?'                 {$$ = new udf::address_of_node(LINE, $1);}
      | tOBJECTS  '(' expr ')' { $$ = new udf::malloc_node(LINE, $3);}
      | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
@@ -122,6 +123,7 @@ exprs : exprs ',' expr            { $$ = new cdk::sequence_node(LINE, $3, $1); }
 
 lval : tIDENTIFIER             { $$ = new cdk::variable_node(LINE, $1); }
         | expr '[' expr ']'     {$$ = new udf::index_node(LINE,$1,$3);}
+        | tIDENTIFIER '@' '(' exprs ')' { $$ = new udf::tensor_indexation_node(LINE, $4); }
      ; 
 
 string : string tSTRING { $$ = $1; $$->append(*$2); delete $2; }
