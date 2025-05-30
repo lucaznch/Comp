@@ -27,6 +27,22 @@ namespace udf{
 
         void accept(basic_ast_visitor *sp, int level) { sp->do_tensor_node(this, level); } 
 
+        
+        static std::vector<size_t> compute_shape(const cdk::sequence_node *seq) {
+            std::vector<size_t> shape;
+            const cdk::sequence_node *current = seq;
+            while (current) {
+                shape.push_back(const_cast<cdk::sequence_node*>(current)->size());
+                auto first = dynamic_cast<cdk::sequence_node*>(const_cast<cdk::sequence_node*>(current)->node(0));
+
+                if (first)
+                    current = first;
+                else
+                    break;
+            }
+            return shape;
+        }
+        
 
     };
 

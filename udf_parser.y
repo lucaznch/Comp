@@ -62,8 +62,8 @@
 %nonassoc tUNARY 
 
 %type <node> program arg declr instr elif fn_declr var_declr
-%type <sequence> exprs args declrs instrs opt_exprs opt_loop_declrs var_declrs dims
-%type <expression> expr dim
+%type <sequence> exprs args declrs instrs opt_exprs opt_loop_declrs var_declrs dims tensor_elements tensor_literal tensor_literals tensor tensors
+%type <expression> expr dim tensor_element
 %type <lvalue> lval
 %type <block> blck
 %type <loop> for
@@ -103,7 +103,13 @@ expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
      | '(' expr ')'          { $$ = $2; }
      | tSIZEOF '(' expr ')'  { $$ = new udf::size_of_node(LINE, $3); }
      | tIDENTIFIER '(' ')'   { $$ = new udf::function_call_node(LINE, *$1, nullptr); delete $1; }
-     | tIDENTIFIER '(' exprs ')'   { $$ = new udf::function_call_node(LINE, *$1, $3); delete $1; }
+     | tIDENTIFIER '(' exprs ')'   { $$ = new udf::function_call_node(LINE, *$1, $3); delete $1; }      
+        | tensors {
+        std::vector<size_t> shape = udf::tensor_node::compute_shape($1);
+        auto type = cdk::tensor_type::create(shape);
+        $$ = new udf::tensor_node(LINE, *type, $1);
+        }
+
      | lval                  { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr         { $$ = new cdk::assignment_node(LINE, $1, $3); }
      ;
@@ -146,7 +152,35 @@ type : tTYPE_INT    { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      ;
 
 
+tensor_element : tINTEGER
+                { $$ = new cdk::integer_node(LINE, $1); }
+                | tREAL
+                { $$ = new cdk::double_node(LINE, $1); }
+                | tSTRING
+                { $$ = new cdk::string_node(LINE, $1); delete $1; }
+                ;
 
+tensor_elements : tensor_elements ',' tensor_element { $$ = new cdk::sequence_node(LINE, $3, $1); }
+                | tensor_element { $$ = new cdk::sequence_node(LINE, $1); }
+                ;
+
+// parses [1,2,3]
+tensor_literal : '[' tensor_elements ']' { $$ = new cdk::sequence_node(LINE, $2); }
+               ;
+
+// parses: [1,2,3], [4,5,6]
+tensor_literals : tensor_literals ',' tensor_literal { $$ = new cdk::sequence_node(LINE, $3, $1); }
+               | tensor_literal { $$ = new cdk::sequence_node(LINE, $1); }
+               ;
+
+//  parses:  [ [1,2,3], [4,5,6] ]
+tensor : '[' tensor_literals ']' { $$ = new cdk::sequence_node(LINE, $2); }
+        ;
+
+// parses: [ [[],[]], [[],[]] ]
+tensors: '[' tensor ',' tensor ']' { $$ = new cdk::sequence_node(LINE, $2, $4); }
+        | tensor        { $$ = new cdk::sequence_node(LINE, $1); }
+        ;
 
 dim : tINTEGER { $$ = new cdk::integer_node(LINE, $1); }
     ;
