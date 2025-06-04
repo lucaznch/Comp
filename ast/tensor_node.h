@@ -31,7 +31,7 @@ namespace udf{
         static std::vector<size_t> compute_shape(const cdk::sequence_node *seq) {
             std::vector<size_t> shape;
             const cdk::sequence_node *current = seq;
-            while (current) {
+            while (current->label()==(new cdk::sequence_node(1))->label()) {
                 shape.push_back(const_cast<cdk::sequence_node*>(current)->size());
                 auto first = dynamic_cast<cdk::sequence_node*>(const_cast<cdk::sequence_node*>(current)->node(0));
 
