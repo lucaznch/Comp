@@ -80,6 +80,7 @@ bool num_to_real(double &val, const std::string &s) {
 "||"                   return tOR;
 
 "**"                   return tCONTRACTION;
+".dims"                 return tDIMS;
 ".dim"                 return tDIM;
 ".reshape"             return tRESHAPE;
 ".rank"                return tRANK;

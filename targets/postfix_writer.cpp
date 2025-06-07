@@ -341,6 +341,9 @@ void udf::postfix_writer::do_capacity_node(udf::capacity_node * const node, int 
 void udf::postfix_writer::do_rank_node(udf::rank_node * const node, int lvl) {
 }
 
+void udf::postfix_writer::do_dim_node(udf::dim_node * const node, int lvl) {
+}
+
 void udf::postfix_writer::do_dims_node(udf::dims_node * const node, int lvl) {
 }
 

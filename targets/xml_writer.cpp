@@ -365,11 +365,6 @@ void udf::xml_writer::do_var_declaration_node(udf::var_declaration_node * const 
     os() << "undefined";
   closeTag("type", lvl + 2);
   
-  
-  
-  
-
-
   // identifier
   openTag("identifier", lvl + 2);
   os() << node->identifier();
@@ -440,35 +435,52 @@ void udf::xml_writer::do_break_node(udf::break_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_capacity_node(udf::capacity_node * const node, int lvl) {
-  openTag(node, lvl);
-  closeTag(node, lvl);
+  do_unary_operation(node, lvl);
 }
 
 void udf::xml_writer::do_rank_node(udf::rank_node * const node, int lvl) {
-  openTag(node, lvl);
-  closeTag(node, lvl);
+  do_unary_operation(node, lvl);
+}
+
+
+void udf::xml_writer::do_dim_node(udf::dim_node * const node, int lvl) {
+  do_binary_operation(node, lvl);
 }
 
 void udf::xml_writer::do_dims_node(udf::dims_node * const node, int lvl) {
-  openTag(node, lvl);
-  closeTag(node, lvl);
+  do_unary_operation(node, lvl);
 }
 
 void udf::xml_writer::do_tensor_indexation_node(udf::tensor_indexation_node * const node, int lvl) {
   openTag(node, lvl);
+  
+  openTag("tensor", lvl + 2);
+  node->tensor()->accept(this, lvl + 4);
+  closeTag("tensor", lvl + 2);
+
+  openTag("indexes", lvl + 2);
+  node->indexes()->accept(this, lvl + 4);
+  closeTag("indexes", lvl + 2);
+
   closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_reshape_node(udf::reshape_node * const node, int lvl){
   openTag(node, lvl);
+  
+  openTag("tensor", lvl + 2);
+  node->tensor()->accept(this, lvl + 4);
+  closeTag("tensor", lvl + 2);
 
+  openTag("shape", lvl + 2);
+  node->sizes()->accept(this, lvl + 4);
+  closeTag("shape", lvl + 2);
 
   closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_contraction_node(udf::contraction_node * const node, int lvl){
-  openTag(node, lvl);
-  closeTag(node, lvl);
+   do_binary_operation(node, lvl);
 }
 
 void udf::xml_writer::do_tensor_node(udf::tensor_node * const node, int lvl){

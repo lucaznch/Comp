@@ -46,7 +46,7 @@
 %token tSIZEOF
 %token tWRITE tWRITELN
 %token tAND tOR
-%token tCONTRACTION tDIM tRESHAPE tRANK tCAPACITY
+%token tCONTRACTION tDIM tDIMS tRESHAPE tRANK tCAPACITY
 %token tOBJECTS tNULLPTR
 %nonassoc tIFX
 %nonassoc tELIF tELSE
@@ -58,8 +58,9 @@
 %left '+' '-'
 %left '*' '/' '%'
 %left '[' ']' 
-%left '?'
-%left tCONTRACTION
+%left '?' 
+%left tCONTRACTION tDIM tDIMS tRESHAPE tRANK tCAPACITY 
+%right '@'
 %nonassoc tUNARY 
 
 %type <node> program arg declr instr elif fn_declr var_declr
@@ -79,39 +80,40 @@
 program : declrs { compiler->ast(new udf::program_node(LINE, $1)); }
         ;
 
-expr : tINTEGER                           { $$ = new cdk::integer_node(LINE, $1); }
-     | tREAL                              { $$ = new cdk::double_node(LINE, $1); }
-     | string                             { $$ = new cdk::string_node(LINE, $1); delete $1; }
-     | tNULLPTR                           { $$ = new udf::nullptr_node(LINE);}
-     | '-' expr %prec tUNARY              { $$ = new cdk::unary_minus_node(LINE, $2); }
-     | '+' expr %prec tUNARY              { $$ = new cdk::unary_plus_node(LINE, $2); }
-     | '~' expr %prec tUNARY              { $$ = new cdk::not_node(LINE, $2);}
-     | tIDENTIFIER tDIM '(' expr ')'      { $$ = new udf::dims_node(LINE, $4); }
-     | expr '?'                           { $$ = new udf::address_of_node(LINE, $1);}
-     | tOBJECTS  '(' expr ')'             { $$ = new udf::malloc_node(LINE, $3);}
-     | tINPUT                             { $$ = new udf::input_node(LINE); }
-     | expr '+' expr                      { $$ = new cdk::add_node(LINE, $1, $3); }
-     | expr '-' expr                      { $$ = new cdk::sub_node(LINE, $1, $3); }
-     | expr '*' expr                      { $$ = new cdk::mul_node(LINE, $1, $3); }
-     | expr '/' expr                      { $$ = new cdk::div_node(LINE, $1, $3); }
-     | expr '%' expr                      { $$ = new cdk::mod_node(LINE, $1, $3); }
-     | expr '<' expr                      { $$ = new cdk::lt_node(LINE, $1, $3); }
-     | expr '>' expr                      { $$ = new cdk::gt_node(LINE, $1, $3); }
-     | expr tAND expr                     { $$ = new cdk::and_node(LINE, $1, $3); }
-     | expr tOR expr                      { $$ = new cdk::or_node(LINE, $1, $3); }
-     | expr tGE expr                      { $$ = new cdk::ge_node(LINE, $1, $3); }
-     | expr tLE expr                      { $$ = new cdk::le_node(LINE, $1, $3); }
-     | expr tNE expr                      { $$ = new cdk::ne_node(LINE, $1, $3); }
-     | expr tEQ expr                      { $$ = new cdk::eq_node(LINE, $1, $3); }
-     | expr tCONTRACTION expr             { $$ = new udf::contraction_node(LINE, $1, $3); }
-     | tIDENTIFIER tRESHAPE '(' exprs ')' { $$ = new udf::reshape_node(LINE, $4); }
-     | tIDENTIFIER tRANK                  { $$ = new udf::rank_node(LINE, *$1); delete $1; }
-     | '(' expr ')'                       { $$ = $2; }
-     | tSIZEOF '(' expr ')'               { $$ = new udf::size_of_node(LINE, $3); }
-     | tIDENTIFIER '(' ')'                { $$ = new udf::function_call_node(LINE, *$1, nullptr); delete $1; }
-     | tIDENTIFIER '(' exprs ')'          { $$ = new udf::function_call_node(LINE, *$1, $3); delete $1; }      
-     | tensor
-        {
+expr : tINTEGER              { $$ = new cdk::integer_node(LINE, $1); }
+     | tREAL                 { $$ = new cdk::double_node(LINE, $1); }
+     | string                { $$ = new cdk::string_node(LINE, $1); delete $1; }
+     | tNULLPTR              { $$ = new udf::nullptr_node(LINE);}
+     | '-' expr %prec tUNARY { $$ = new cdk::unary_minus_node(LINE, $2); }
+     | '+' expr %prec tUNARY { $$ = new cdk::unary_plus_node(LINE, $2); }
+     | '~' expr %prec tUNARY   {$$ = new cdk::not_node(LINE, $2);}
+     | expr tDIM '(' expr ')' { $$ = new udf::dim_node(LINE, $1,$4); }
+     | expr tDIMS             { $$ =  new udf::dims_node(LINE, $1); }
+     | expr tRESHAPE '(' dims ')' { $$ = new udf::reshape_node(LINE, $1,$4); }
+     | expr tRANK            { $$ =  new udf::rank_node(LINE, $1); }
+     | expr tCAPACITY           { $$ =  new udf::capacity_node(LINE, $1); }
+     | expr '?'                 {$$ = new udf::address_of_node(LINE, $1);}
+     | tOBJECTS  '(' expr ')' { $$ = new udf::malloc_node(LINE, $3);}
+     | tINPUT                 { $$ = new udf::input_node(LINE); }
+     | expr '+' expr         { $$ = new cdk::add_node(LINE, $1, $3); }
+     | expr '-' expr         { $$ = new cdk::sub_node(LINE, $1, $3); }
+     | expr '*' expr         { $$ = new cdk::mul_node(LINE, $1, $3); }
+     | expr '/' expr         { $$ = new cdk::div_node(LINE, $1, $3); }
+     | expr '%' expr         { $$ = new cdk::mod_node(LINE, $1, $3); }
+     | expr '<' expr         { $$ = new cdk::lt_node(LINE, $1, $3); }
+     | expr '>' expr         { $$ = new cdk::gt_node(LINE, $1, $3); }
+     | expr tAND expr        { $$ = new cdk::and_node(LINE, $1, $3); }
+     | expr tOR expr         { $$ = new cdk::or_node(LINE, $1, $3); }
+     | expr tGE expr         { $$ = new cdk::ge_node(LINE, $1, $3); }
+     | expr tLE expr         { $$ = new cdk::le_node(LINE, $1, $3); }
+     | expr tNE expr         { $$ = new cdk::ne_node(LINE, $1, $3); }
+     | expr tEQ expr         { $$ = new cdk::eq_node(LINE, $1, $3); }
+     | expr tCONTRACTION expr { $$ = new udf::contraction_node(LINE, $1, $3); }
+     | '(' expr ')'          { $$ = $2; }
+     | tSIZEOF '(' expr ')'  { $$ = new udf::size_of_node(LINE, $3); }
+     | tIDENTIFIER '(' ')'   { $$ = new udf::function_call_node(LINE, *$1, nullptr); delete $1; }
+     | tIDENTIFIER '(' exprs ')'   { $$ = new udf::function_call_node(LINE, *$1, $3); delete $1; }      
+     | tensor {
                 std::vector<size_t> shape = udf::tensor_node::compute_shape($1);
                 auto type = cdk::tensor_type::create(shape);
                 $$ = new udf::tensor_node(LINE, *type, $1);
@@ -124,9 +126,15 @@ exprs : exprs ',' expr          { $$ = new cdk::sequence_node(LINE, $3, $1); }
       | expr                    { $$ = new cdk::sequence_node(LINE, $1); }
       ;
 
+<<<<<<< HEAD
 lval : tIDENTIFIER                      { $$ = new cdk::variable_node(LINE, $1); }
      | expr '[' expr ']'                { $$ = new udf::index_node(LINE,$1,$3);}
      | tIDENTIFIER '@' '(' exprs ')'    { $$ = new udf::tensor_indexation_node(LINE, $4); }
+=======
+lval : tIDENTIFIER             { $$ = new cdk::variable_node(LINE, $1); }
+        | expr '[' expr ']'     {$$ = new udf::index_node(LINE,$1,$3);}
+        | expr '@' '(' exprs ')' { $$ = new udf::tensor_indexation_node(LINE, $1, $4); }
+>>>>>>> 5685cdf (added dim_done (different from dims_node), added and changed tensor operations)
      ; 
 
 string : string tSTRING { $$ = $1; $$->append(*$2); delete $2; }

@@ -250,6 +250,9 @@ void udf::type_checker::do_rank_node(udf::rank_node * const node, int lvl) {
 void udf::type_checker::do_dims_node(udf::dims_node * const node, int lvl) {
 }
 
+void udf::type_checker::do_dim_node(udf::dim_node * const node, int lvl) {
+}
+
 void udf::type_checker::do_tensor_indexation_node(udf::tensor_indexation_node * const node, int lvl) {
 }
 
