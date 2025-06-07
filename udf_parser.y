@@ -127,9 +127,9 @@ exprs : exprs ',' expr             { $$ = new cdk::sequence_node(LINE, $3, $1); 
       | expr                       { $$ = new cdk::sequence_node(LINE, $1); }
       ;
 
-lval : tIDENTIFIER                 { $$ = new cdk::variable_node(LINE, $1); }
-        | expr '[' expr ']'        { $$ = new udf::index_node(LINE,$1,$3); }
-        | expr '@' '(' exprs ')'   { $$ = new udf::tensor_indexation_node(LINE, $1, $4); }
+lval : tIDENTIFIER             { $$ = new cdk::variable_node(LINE, $1); }
+        | expr '[' expr ']'     {$$ = new udf::index_node(LINE,$1,$3);}
+        | expr '@' '(' exprs ')' { $$ = new udf::tensor_indexation_node(LINE, $1, $4); }
      ; 
 
 string : string tSTRING     { $$ = $1; $$->append(*$2); delete $2; }
