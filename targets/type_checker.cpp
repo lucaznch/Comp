@@ -8,7 +8,8 @@
 //---------------------------------------------------------------------------
 
 void udf::type_checker::do_sequence_node(cdk::sequence_node *const node, int lvl) {
-  // EMPTY
+  for (size_t i = 0; i < node->size(); i++)
+    node->node(i)->accept(this, lvl);
 }
 
 //---------------------------------------------------------------------------
@@ -37,7 +38,7 @@ void udf::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
 void udf::type_checker::do_integer_node(cdk::integer_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-}
+ }
 
 void udf::type_checker::do_string_node(cdk::string_node *const node, int lvl) {
   ASSERT_UNSPEC;
@@ -135,6 +136,8 @@ void udf::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {
 }
 
 void udf::type_checker::do_assignment_node(cdk::assignment_node *const node, int lvl) {
+  //TODO testing the postfix_writer commeting out whats blowing it up here
+  /*
   ASSERT_UNSPEC;
 
   try {
@@ -153,6 +156,7 @@ void udf::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 
   // in udf, expressions are always int
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  */
 }
 
 //---------------------------------------------------------------------------
@@ -209,6 +213,7 @@ void udf::type_checker::do_function_call_node(udf::function_call_node *const nod
 }
 
 void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {
+  if (node->retvalue() != nullptr) node->retvalue()->accept(this, lvl);
 }
 
 void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
@@ -266,4 +271,5 @@ void udf::type_checker::do_tensor_node(udf::tensor_node * const node, int lvl){
 }
 
 void udf::type_checker::do_write_node(udf::write_node * const node, int lvl) {
+  node->arguments()->accept(this, lvl + 2);
 }

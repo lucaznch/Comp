@@ -10,6 +10,7 @@ namespace udf {
 
     std::string _name; // identifier
     int _value;
+
     bool _constant; // is it a constant?
     int _qualifier; // qualifiers: public, forward, "private" (i.e., none)
     std::shared_ptr<cdk::basic_type> _type; // type (type id + type size)

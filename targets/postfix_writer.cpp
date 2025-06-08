@@ -302,16 +302,23 @@ void udf::postfix_writer::do_if_else_node(udf::if_else_node * const node, int lv
 //---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
+  //TODO all this scope stuff
+  //if (node->is_scope()) _symtab.push(); // for block-local vars
+  if (node->declarations()) node->declarations()->accept(this, lvl + 2);
+  if (node->instructions()) node->instructions()->accept(this, lvl + 2);
+  //if (node->is_scope()) _symtab.pop();
 }
 
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
   _pf.TEXT();
   _pf.ALIGN();
-  std::string funcName = node->identifier() =="udf" ? "_main" : "_FUNC" + node->identifier() ;
-  _pf.GLOBAL(funcName, "FUNC"); //TODO são todas globais?
+  std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+
+  _pf.GLOBAL(funcName,  _pf.FUNC()); //TODO são todas globais?
   _pf.LABEL(funcName);
   // compute stack size to be reserved for local variables
   auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  _function = function;
   frame_size_calculator lsc(_compiler, _symtab, function);
   node->accept(&lsc, lvl);
   _pf.ENTER(lsc.localsize()); // total stack size reserved for local variables
@@ -329,6 +336,32 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
 }
 
 void udf::postfix_writer::do_return_node(udf::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  auto function = _function ? _function : nullptr;
+  if (function == nullptr)
+    std::cerr << node->lineno() << ": should not happen: invalid return" << std::endl;
+  
+  auto return_type = cdk::functional_type::cast(function->type())->output(0); 
+
+  // should not reach here without returning a value (if not void)
+  if (return_type->name() != cdk::TYPE_VOID) {
+    if (node->retvalue()) node->retvalue()->accept(this, lvl + 2);
+
+    //std::cerr << "RETVAL2 " << _function->name() << ":" << _function->type()->size() << std::endl;
+
+    if (return_type->name() == cdk::TYPE_INT || return_type->name() == cdk::TYPE_STRING ||
+        return_type->name() == cdk::TYPE_POINTER || return_type->name() == cdk::TYPE_FUNCTIONAL) {
+      _pf.STFVAL32();
+    } else if (return_type->name() == cdk::TYPE_DOUBLE) {
+      if (node->retvalue()->is_typed(cdk::TYPE_INT))
+	      _pf.I2D();
+      _pf.STFVAL64();
+    } else {
+      std::cerr << node->lineno() << ": should not happen: unknown return type" << std::endl;
+    }
+  }
+  _pf.LEAVE();
+  _pf.RET();
 }
 
 void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
@@ -386,26 +419,26 @@ void udf::postfix_writer::do_tensor_node(udf::tensor_node * const node, int lvl)
 }
 
 void udf::postfix_writer::do_write_node(udf::write_node * const node, int lvl) {
+    ASSERT_SAFE_EXPRESSIONS;
     for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
       auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(ix));
-
       std::shared_ptr<cdk::basic_type> etype = child->type();
+
       child->accept(this, lvl); // expression to print
       if (etype->name() == cdk::TYPE_INT) {
-        //_functions_to_declare.insert("printi");
         _pf.CALL("printi");
         _pf.TRASH(4); // trash int
       } else if (etype->name() == cdk::TYPE_DOUBLE) {
-        //_functions_to_declare.insert("printd");
         _pf.CALL("printd");
         _pf.TRASH(8); // trash double
       } else if (etype->name() == cdk::TYPE_STRING) {
-        //_functions_to_declare.insert("prints");
         _pf.CALL("prints");
         _pf.TRASH(4); // trash char pointer
       } else {
         std::cerr << "cannot print expression of unknown type" << std::endl;
         return;
       }
+      if(node->newline())
+        _pf.CALL("println");
     }
 }

@@ -150,14 +150,46 @@ void udf::frame_size_calculator::do_var_declaration_node(udf::var_declaration_no
 }
 
 void udf::frame_size_calculator::do_function_node(udf::function_node *const node, int lvl) {
-  node->block()->accept(this, lvl + 2);
+  // EMPTY
 }
 
 void udf::frame_size_calculator::do_program_node(udf::program_node *const node, int lvl) {
-  node->declarations()->accept(this, lvl + 2);
+  // EMPTY
 }
 
 void udf::frame_size_calculator::do_size_of_node(udf::size_of_node *const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_tensor_node(udf::tensor_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_tensor_indexation_node(udf::tensor_indexation_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_reshape_node(udf::reshape_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_capacity_node(udf::capacity_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_rank_node(udf::rank_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_dims_node(udf::dims_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_dim_node(udf::dim_node * const node, int lvl) {
+  // EMPTY
+}
+
+void udf::frame_size_calculator::do_contraction_node(udf::contraction_node * const node, int lvl) {
   // EMPTY
 }
 

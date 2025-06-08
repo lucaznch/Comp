@@ -15,7 +15,7 @@ namespace udf {
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
     int _offset;
-
+    std::shared_ptr<udf::symbol> _function;
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<udf::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :
