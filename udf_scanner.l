@@ -91,8 +91,16 @@ bool num_to_real(double &val, const std::string &s) {
 \"                      yy_push_state(X_STRING); yylval.s = new std::string(""); // enter string
 <X_STRING>\"            yy_pop_state(); return tSTRING; // exit string
 <X_STRING>\\\"          *yylval.s += '\"';              // escaped quote
+<X_STRING>\\n         { *yylval.s += '\n'; }
+<X_STRING>\\r         { *yylval.s += '\r'; }
+<X_STRING>\\t         { *yylval.s += '\t'; }
+<X_STRING>\\\"        { *yylval.s += '"'; }
+<X_STRING>\\\\        { *yylval.s += '\\'; }
+<X_STRING>\\[0-9a-fA-F]{1,2} {
+  char c = static_cast<char>(strtol(yytext + 1, nullptr, 16));
+  *yylval.s += c;
+}
 <X_STRING>\\.           *yylval.s += yytext[1];         // handle common escapes
-<X_STRING>\n            yyerror("newline in string");   // disallow newline in string
 <X_STRING>.             *yylval.s += *yytext;           // regular character
 
 0x[0-9a-fA-F]+ {
