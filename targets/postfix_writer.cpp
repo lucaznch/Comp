@@ -18,15 +18,36 @@ void udf::postfix_writer::do_double_node(cdk::double_node * const node, int lvl)
 }
 
 void udf::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+   node->argument()->accept(this, lvl + 2);
+  _pf.INT(0);
+  _pf.EQ();
 }
 
 void udf::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+  //the labels are for not evaluating the second node if the first is false
+  int lbl = ++_lbl;
+  node->left()->accept(this, lvl + 2);
+  _pf.DUP32();
+  _pf.JZ(mklbl(lbl));
+  node->right()->accept(this, lvl + 2);
+  _pf.AND();
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl));
 }
 
 void udf::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+  //the labels are for not evaluating the second node if the first is false
+  int lbl = ++_lbl;
+  node->left()->accept(this, lvl + 2);
+  _pf.DUP32();
+  _pf.JNZ(mklbl(lbl));
+  node->right()->accept(this, lvl + 2);
+  _pf.OR();
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl));
 }
 
 //---------------------------------------------------------------------------

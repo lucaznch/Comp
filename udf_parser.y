@@ -54,6 +54,7 @@
 %right '='
 %left tOR
 %left tAND
+%right '~'
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
@@ -86,7 +87,7 @@ expr : tINTEGER                    { $$ = new cdk::integer_node(LINE, $1); }
      | tNULLPTR                    { $$ = new udf::nullptr_node(LINE);}
      | '-' expr %prec tUNARY       { $$ = new cdk::unary_minus_node(LINE, $2); }
      | '+' expr %prec tUNARY       { $$ = new cdk::unary_plus_node(LINE, $2); }
-     | '~' expr %prec tUNARY       { $$ = new cdk::not_node(LINE, $2); }
+     | '~' expr                    { $$ = new cdk::not_node(LINE, $2); }
      | expr tDIM '(' expr ')'      { $$ = new udf::dim_node(LINE, $1,$4); }
      | expr tDIMS                  { $$ =  new udf::dims_node(LINE, $1); }
      | expr tRESHAPE '(' dims ')'  { $$ = new udf::reshape_node(LINE, $1,$4); }
