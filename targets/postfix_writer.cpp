@@ -1,5 +1,6 @@
 #include "targets/type_checker.h"
 #include "targets/postfix_writer.h"
+#include "targets/frame_size_calculator.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 
 //---------------------------------------------------------------------------
@@ -183,17 +184,21 @@ void udf::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 //---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_program_node(udf::program_node * const node, int lvl) {
+  //TODO acho que nada disto é necessario no nosso
+  //olhando para o til talvez o RTS exiga que a primeira função seja a main, pora gora vou assumir que não
+  /*
   // Note that Simple doesn't have functions. Thus, it doesn't need
   // a function node. However, it must start in the main function.
   // The ProgramNode (representing the whole program) doubles as a
   // main function node.
+
 
   // generate the main function (RTS mandates that its name be "_main")
   _pf.TEXT();
   _pf.ALIGN();
   _pf.GLOBAL("_main", _pf.FUNC());
   _pf.LABEL("_main");
-  _pf.ENTER(0);  // udf doesn't implement local variables
+  _pf.ENTER(0);  
 
   node->declarations()->accept(this, lvl);
 
@@ -202,12 +207,15 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.STFVAL32();
   _pf.LEAVE();
   _pf.RET();
-
+  */
   // these are just a few library function imports
   _pf.EXTERN("readi");
   _pf.EXTERN("printi");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
+
+  node->declarations()->accept(this, lvl);
+
 }
 
 //---------------------------------------------------------------------------
@@ -297,6 +305,24 @@ void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
 }
 
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
+  _pf.TEXT();
+  _pf.ALIGN();
+  std::string funcName = node->identifier() =="udf" ? "_main" : "_FUNC" + node->identifier() ;
+  _pf.GLOBAL(funcName, "FUNC"); //TODO são todas globais?
+  _pf.LABEL(funcName);
+  // compute stack size to be reserved for local variables
+  auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  frame_size_calculator lsc(_compiler, _symtab, function);
+  node->accept(&lsc, lvl);
+  _pf.ENTER(lsc.localsize()); // total stack size reserved for local variables
+
+  _offset = 0;
+  os() << "        ;; before body " << std::endl;
+  node->block()->accept(this, lvl);
+  os() << "        ;; after body " << std::endl;
+
+  _pf.LEAVE(); //TODO Isto não devia estar no return? faz diferença estar aqui para as não tenham return?
+  _pf.RET();
 }
 
 void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
@@ -360,4 +386,26 @@ void udf::postfix_writer::do_tensor_node(udf::tensor_node * const node, int lvl)
 }
 
 void udf::postfix_writer::do_write_node(udf::write_node * const node, int lvl) {
+    for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
+      auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(ix));
+
+      std::shared_ptr<cdk::basic_type> etype = child->type();
+      child->accept(this, lvl); // expression to print
+      if (etype->name() == cdk::TYPE_INT) {
+        //_functions_to_declare.insert("printi");
+        _pf.CALL("printi");
+        _pf.TRASH(4); // trash int
+      } else if (etype->name() == cdk::TYPE_DOUBLE) {
+        //_functions_to_declare.insert("printd");
+        _pf.CALL("printd");
+        _pf.TRASH(8); // trash double
+      } else if (etype->name() == cdk::TYPE_STRING) {
+        //_functions_to_declare.insert("prints");
+        _pf.CALL("prints");
+        _pf.TRASH(4); // trash char pointer
+      } else {
+        std::cerr << "cannot print expression of unknown type" << std::endl;
+        return;
+      }
+    }
 }

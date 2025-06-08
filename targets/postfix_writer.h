@@ -14,11 +14,12 @@ namespace udf {
     cdk::symbol_table<udf::symbol> &_symtab;
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
+    int _offset;
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<udf::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :
-        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0) {
+        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0),_offset(0) {
     }
 
   public:
