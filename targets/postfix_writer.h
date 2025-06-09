@@ -18,6 +18,7 @@ namespace udf {
     int _lbl;
     int _offset;
     std::shared_ptr<udf::symbol> _function;
+    std::vector<int> _forCond, _forStep, _forEnd; // for break/continue
     Context _context;
     bool _errors;
     std::stack<std::string> _segments; //consider declaring a string literal inside a function definition, and possibly more complicated cases (not sure), this way we dont need to track the segments types ourselves, the stack handles it

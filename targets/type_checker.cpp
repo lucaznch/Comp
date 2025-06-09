@@ -344,6 +344,14 @@ void udf::type_checker::do_size_of_node(udf::size_of_node * const node, int lvl)
 }
 
 void udf::type_checker::do_for_node(udf::for_node * const node, int lvl) {
+  if(node->inits())
+    node->inits()->accept(this, lvl + 4);
+  if(node->conditions())
+    node->conditions()->accept(this, lvl + 4);
+  if(node->steps())
+    node->steps()->accept(this, lvl + 4);
+  if(node->instr())
+    node->instr()->accept(this, lvl+4);
 }
 
 void udf::type_checker::do_continue_node(udf::continue_node * const node, int lvl) {

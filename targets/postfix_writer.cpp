@@ -563,6 +563,31 @@ void udf::postfix_writer::do_size_of_node(udf::size_of_node * const node, int lv
 }
 
 void udf::postfix_writer::do_for_node(udf::for_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  int forCond = ++_lbl;
+  int forStep = ++_lbl;
+  int forEnd = ++_lbl;
+
+  _forCond.push_back(forCond); // after init, before body
+  _forStep.push_back(forStep); // after intruction
+  _forEnd.push_back(forEnd); // after for
+
+  if(node->inits())
+    node->inits()->accept(this, lvl + 4);
+  _pf.LABEL(mklbl(forCond = ++_lbl));
+  if(node->conditions())
+    node->conditions()->accept(this, lvl + 4);
+  _pf.JZ(mklbl(forEnd = ++_lbl));
+  if(node->instr())
+    node->instr()->accept(this, lvl+4);
+  if(node->steps())
+    node->steps()->accept(this, lvl + 4);
+  _pf.JMP(mklbl(forCond));
+  _pf.LABEL(mklbl(forEnd));
+  
+  _forCond.pop_back();
+  _forStep.pop_back();
+  _forEnd.pop_back();
 }
 
 void udf::postfix_writer::do_continue_node(udf::continue_node * const node, int lvl) {
