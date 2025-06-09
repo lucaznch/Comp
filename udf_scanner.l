@@ -94,8 +94,6 @@ bool num_to_real(double &val, const std::string &s) {
 <X_STRING>\\n         { *yylval.s += '\n'; }
 <X_STRING>\\r         { *yylval.s += '\r'; }
 <X_STRING>\\t         { *yylval.s += '\t'; }
-<X_STRING>\\\"        { *yylval.s += '"'; }
-<X_STRING>\\\\        { *yylval.s += '\\'; }
 <X_STRING>\\[0-9a-fA-F]{1,2} {
   char c = static_cast<char>(strtol(yytext + 1, nullptr, 16));
   *yylval.s += c;

@@ -14,7 +14,11 @@ void udf::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
 }
 
 void udf::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  // EMPTY
+  if (_context == Context::Body) {
+    _pf.DOUBLE(node->value()); // load number to the stack
+  } else {
+    _pf.SDOUBLE(node->value());    // double is on the DATA segment
+  }
 }
 
 void udf::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
@@ -61,21 +65,30 @@ void udf::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  _pf.INT(node->value()); // push an integer
+  if (_context == Context::Body) {
+    _pf.INT(node->value()); // integer literal is on the stack: push an integer
+  } else {
+    _pf.SINT(node->value()); // integer literal is on the DATA segment
+  }
 }
 
 void udf::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
   int lbl1;
-
-  /* generate the string */
-  _pf.RODATA(); // strings are DATA readonly
-  _pf.ALIGN(); // make sure we are aligned
+  /* generate the string literal */
+  _pf.RODATA(); // strings are readonly DATA
+  _pf.ALIGN(); // make sure the address is aligned
   _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
   _pf.SSTRING(node->value()); // output string characters
-
-  /* leave the address on the stack */
-  _pf.TEXT(); // return to the TEXT segment
-  _pf.ADDR(mklbl(lbl1)); // the string to be printed
+  if (_context == Context::Body) {
+    // local variable initializer
+    if (_segments.size() == 0) _pf.TEXT();
+    else _pf.TEXT(_segments.top());
+    _pf.ADDR(mklbl(lbl1));
+  } else {
+    // global variable initializer
+    _pf.DATA();
+    _pf.SADDR(mklbl(lbl1));
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -331,26 +344,57 @@ void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
 }
 
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
-  _pf.TEXT();
-  _pf.ALIGN();
-  std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+  ASSERT_SAFE_EXPRESSIONS;
+  if(node->block()==nullptr){
+    if(node->qualifier()==tForward)
+      _pf.EXTERN(node->identifier());
+    else 
+      std::cerr << "Non Forward function " << node->identifier() << " declaration must have body\n";
+    return;
+  }
 
-  _pf.GLOBAL(funcName,  _pf.FUNC()); //TODO são todas globais?
-  _pf.LABEL(funcName);
-  // compute stack size to be reserved for local variables
-  auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+  _segments.push(funcName);
+   auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
   _function = function;
+  _offset = 8; //4 fp + 4 return address
+
+  if (node->args()) {
+    _context = Context::Args; 
+    for (size_t ix = 0; ix < node->args()->size(); ix++) {
+      cdk::basic_node *arg = node->args()->node(ix);
+      if (arg == nullptr) break; // this means an empty sequence of arguments
+      arg->accept(this, 0); // the function symbol is at the top of the stack
+    }
+    _context = Context::Global;
+  }
+
+  _pf.TEXT(_segments.top());
+  _pf.ALIGN();
+  if (node->qualifier() == tPublic) _pf.GLOBAL(funcName,  _pf.FUNC()); //globais são as public, as private basta o label
+  _pf.LABEL(funcName);
+  
+  // compute stack size to be reserved for local variables
   frame_size_calculator lsc(_compiler, _symtab, function);
   node->accept(&lsc, lvl);
   _pf.ENTER(lsc.localsize()); // total stack size reserved for local variables
 
-  _offset = 0;
+  _context = Context::Body;
   os() << "        ;; before body " << std::endl;
   node->block()->accept(this, lvl);
   os() << "        ;; after body " << std::endl;
 
   _pf.LEAVE(); //TODO Isto não devia estar no return? faz diferença estar aqui para as não tenham return?
   _pf.RET();
+
+  _context=Context::Global; //we always exit a function 
+  //_symtab.pop(); //TODO later scope of arguments l
+  _function = nullptr; //exited the function declaration
+  _segments.pop();
+
+  _pf.DATA();   //FIXME could be RODATA what
+  _pf.SADDR(funcName);
+  
 }
 
 void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
@@ -386,6 +430,118 @@ void udf::postfix_writer::do_return_node(udf::return_node * const node, int lvl)
 }
 
 void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  auto id = node->identifier();
+  auto function = _function; //if function == nullptr -> var global
+  std::cout << "INITIAL OFFSET: " << _offset << std::endl;
+  int offset = 0, typesize = node->type()->size(); // in bytes
+
+  if(_context == Context::Global){
+    offset = 0;
+  }
+  else if(_context == Context::Args){
+    offset = _offset;
+    _offset += typesize;
+  }
+  else if(_context == Context::Body){
+    _offset -= typesize;
+    offset = _offset;
+  }
+  else{
+    std::cout << "Invalid Context\n";
+  }
+  std::cout << "OFFSET: " << id << ", " << offset << std::endl;
+
+  auto symbol = new_symbol();
+  if(symbol){
+    symbol->set_offset(offset);
+    reset_new_symbol();
+  }
+
+  if (_context == Context::Args)
+    return; //offsets are set, no further action needed
+
+  if (_context == Context::Body) {
+    if (node->initializer()==nullptr)
+      return;
+    
+    node->initializer()->accept(this, lvl);
+    if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_STRING) || node->is_typed(cdk::TYPE_POINTER)) {
+      _pf.LOCAL(symbol->offset());
+      _pf.STINT();
+    } else if (node->is_typed(cdk::TYPE_DOUBLE)) {
+      if (node->initializer()->is_typed(cdk::TYPE_INT))
+        _pf.I2D();
+      _pf.LOCAL(symbol->offset());
+      _pf.STDOUBLE();
+    } else {
+      std::cerr << "cannot initialize" << std::endl;
+    }
+    return;
+  }
+
+  if (_context != Context::Global)
+    std::cout << "invalid context" << std::endl; 
+
+  if (node->initializer() == nullptr) {
+    std::cout << "AAAAAAAAAAAAAAAAAAAAAA\n\n\n\n\n";
+    _pf.BSS();
+    _pf.ALIGN();
+    _pf.LABEL(id);
+    _pf.SALLOC(typesize);
+    return;
+  }
+  if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_DOUBLE) || node->is_typed(cdk::TYPE_POINTER)) {
+    _pf.DATA();
+    _pf.ALIGN();
+    _pf.LABEL(id);
+
+    if (!node->is_typed(cdk::TYPE_DOUBLE)){
+      node->initializer()->accept(this, lvl);
+      return;
+    }
+
+
+    if (node->initializer()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->initializer()->accept(this, lvl);
+    }
+    else if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+      cdk::integer_node *dclini = dynamic_cast<cdk::integer_node*>(node->initializer());
+      cdk::double_node ddi(dclini->lineno(), dclini->value());
+      ddi.accept(this, lvl);
+    }
+    else {
+      std::cerr << node->lineno() << ": '" << id << "' has bad initializer for real value\n";
+      _errors = true;
+    }
+
+    return;
+  }
+
+  if (node->is_typed(cdk::TYPE_STRING)) {
+      if (dynamic_cast<cdk::string_node *>(node)) {
+        int litlbl;
+        // HACK!!! string literal initializers must be emitted before the string identifier
+        _pf.RODATA();
+        _pf.ALIGN();
+        _pf.LABEL(mklbl(litlbl = ++_lbl));
+        _pf.SSTRING(dynamic_cast<cdk::string_node*>(node->initializer())->value());
+        _pf.ALIGN();
+        _pf.LABEL(id);
+        _pf.SADDR(mklbl(litlbl));
+        return;
+      }
+      else {
+        _pf.DATA();
+        _pf.ALIGN();
+        _pf.LABEL(id);
+        node->initializer()->accept(this, lvl);
+        return;
+      }
+      std::cerr << node->lineno() << ": '" << id << "' has unexpected initializer\n";
+      _errors = true;
+      return;
+  }
 }
 
 void udf::postfix_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {

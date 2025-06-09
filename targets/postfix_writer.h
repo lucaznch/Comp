@@ -4,6 +4,7 @@
 
 #include <sstream>
 #include <cdk/emitters/basic_postfix_emitter.h>
+#include <stack>
 
 namespace udf {
 
@@ -11,15 +12,19 @@ namespace udf {
   //! Traverse syntax tree and generate the corresponding assembly code.
   //!
   class postfix_writer: public basic_ast_visitor {
+    enum class Context { Args, Body, Global };
     cdk::symbol_table<udf::symbol> &_symtab;
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
     int _offset;
     std::shared_ptr<udf::symbol> _function;
+    Context _context;
+    bool _errors;
+    std::stack<std::string> _segments; //consider declaring a string literal inside a function definition, and possibly more complicated cases (not sure), this way we dont need to track the segments types ourselves, the stack handles it
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<udf::symbol> &symtab,
                    cdk::basic_postfix_emitter &pf) :
-        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0),_offset(0) {
+        basic_ast_visitor(compiler), _symtab(symtab), _pf(pf), _lbl(0),_offset(0),_context(Context::Global),_errors(false) {
     }
 
   public:

@@ -150,7 +150,7 @@ void udf::frame_size_calculator::do_var_declaration_node(udf::var_declaration_no
 }
 
 void udf::frame_size_calculator::do_function_node(udf::function_node *const node, int lvl) {
-  // EMPTY
+  node->block()->accept(this, lvl + 2);
 }
 
 void udf::frame_size_calculator::do_program_node(udf::program_node *const node, int lvl) {

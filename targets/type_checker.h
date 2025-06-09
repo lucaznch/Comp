@@ -4,6 +4,7 @@
 
 namespace udf {
 
+  enum Qualifier {tPrivate, tPublic, tForward};
   /**
    * Print nodes as XML elements to the output stream.
    */
