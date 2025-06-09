@@ -187,8 +187,18 @@ void udf::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
 
 void udf::postfix_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
+  const std::string &id = node->name();
+  auto symbol = _symtab.find(id);
+  if (symbol->global()) {
+    _pf.ADDR(symbol->name());
+  } else {
+    _pf.LOCAL(symbol->offset());
+    //std::cerr << "LVAL " << symbol->name() << ":" << symbol->type()->size() << ":" << symbol->offset() << std::endl;
+  }
+  
   // simplified generation: all variables are global
-  _pf.ADDR(node->name());
+  //_pf.ADDR(node->name());
 }
 
 void udf::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
@@ -441,10 +451,10 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
   }
   else if(_context == Context::Args){
     offset = _offset;
-    _offset += typesize;
+    _offset -= typesize;
   }
   else if(_context == Context::Body){
-    _offset -= typesize;
+    _offset += typesize;
     offset = _offset;
   }
   else{
@@ -519,7 +529,8 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
   }
 
   if (node->is_typed(cdk::TYPE_STRING)) {
-      if (dynamic_cast<cdk::string_node *>(node)) {
+      if (dynamic_cast<cdk::string_node *>(node->initializer())) {
+        printf("\033[1;31mRODATA\n\033[0m");
         int litlbl;
         // HACK!!! string literal initializers must be emitted before the string identifier
         _pf.RODATA();
@@ -532,6 +543,7 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
         return;
       }
       else {
+        printf("\033[1;31mDATA\n\033[0m");
         _pf.DATA();
         _pf.ALIGN();
         _pf.LABEL(id);
