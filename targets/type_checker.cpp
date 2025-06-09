@@ -305,7 +305,24 @@ if (node->initializer() != nullptr) {
         if (!node->initializer()->is_typed(cdk::TYPE_FUNCTIONAL)) {
           throw std::string("wrong type for initializer (function expected).");
         }
-      } else {
+      }
+      else if (node->is_typed(cdk::TYPE_UNSPEC)) {
+        printf("\033[1;31m AUTO \n\033[0m");
+        if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+          node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+        } else if (node->initializer()->is_typed(cdk::TYPE_DOUBLE)) {
+          node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+        } else if (node->initializer()->is_typed(cdk::TYPE_STRING)) {
+          node->type(cdk::primitive_type::create(4, cdk::TYPE_STRING));
+        } else if (node->initializer()->is_typed(cdk::TYPE_POINTER)) {
+          node->type(cdk::primitive_type::create(4, cdk::TYPE_POINTER));
+        } else if (node->initializer()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+          node->type(cdk::primitive_type::create(4, cdk::TYPE_FUNCTIONAL));
+        } else {
+          throw std::string("unknown type for initializer.");
+        }
+      }
+      else {
         throw std::string("unknown type for initializer.");
       }
   }
