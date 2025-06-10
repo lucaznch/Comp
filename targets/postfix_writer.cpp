@@ -617,17 +617,14 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
 
   auto symbol = udf::make_symbol(false, node->qualifier(), node->type(), id, (bool)node->initializer(), false);
   if (_symtab.insert(id, symbol)) {
-  } else {
-    auto s = _symtab.find(id);  // retry: forward declarations
-    if (s->qualifier() == Qualifier::tForward) {
-      _symtab.replace(id, symbol);
-    }
-    else {
-      throw std::string("variable '" + id + "' redeclared");
-    }
+  } 
+  else {
+    // symbol with the same name already exists!
+
+    // check our scope
   }
   if(symbol){
-      std::cout << "MORRECABRAÂO: " << id << ", " << offset << std::endl;
+    std::cout << "var_declr_node symbol: " << id << ", " << offset << std::endl;
     symbol->set_offset(offset);
     reset_new_symbol();
   }
