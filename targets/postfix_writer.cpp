@@ -593,6 +593,14 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
 }
 
 void udf::postfix_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  
+  // a pointer is a 32-bit integer
+  if (_context == Context::Body) {
+    _pf.INT(0);
+  } else {
+    _pf.SINT(0);
+  }
 }
 
 void udf::postfix_writer::do_address_of_node(udf::address_of_node * const node, int lvl) {

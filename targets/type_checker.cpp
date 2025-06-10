@@ -346,6 +346,10 @@ void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const
 }
 
 void udf::type_checker::do_nullptr_node(udf::nullptr_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  // nullptr is a pointer to nothing, so it is a pointer type
+  // and pointers represent object addresses and occupy 4 bytes
+  node->type(cdk::reference_type::create(4, nullptr));
 }
 
 void udf::type_checker::do_address_of_node(udf::address_of_node * const node, int lvl) {
