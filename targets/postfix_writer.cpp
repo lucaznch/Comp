@@ -109,29 +109,56 @@ void udf::postfix_writer::do_unary_plus_node(cdk::unary_plus_node * const node, 
 void udf::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->left()->accept(this, lvl);
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
+    _pf.I2D();
+  } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
+    _pf.INT(cdk::reference_type::cast(node->type())->referenced()->size());
+    _pf.MUL();
+  }
+
   node->right()->accept(this, lvl);
-  _pf.ADD();
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
+    _pf.I2D();
+  } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
+    _pf.INT(cdk::reference_type::cast(node->type())->referenced()->size());
+    _pf.MUL();
+  }
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DADD();
+  } else {
+    _pf.ADD();
+  }
 }
 
 void udf::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->left()->accept(this, lvl);
   node->right()->accept(this, lvl);
-  _pf.SUB();
+  if (node->type()->name() == cdk::TYPE_DOUBLE) 
+    _pf.DSUB();        
+  else 
+    _pf.SUB();        
 }
 
 void udf::postfix_writer::do_mul_node(cdk::mul_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->left()->accept(this, lvl);
   node->right()->accept(this, lvl);
-  _pf.MUL();
+  if (node->type()->name() == cdk::TYPE_DOUBLE) 
+    _pf.DMUL();        
+  else 
+    _pf.MUL();    
 }
 
 void udf::postfix_writer::do_div_node(cdk::div_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->left()->accept(this, lvl);
   node->right()->accept(this, lvl);
-  _pf.DIV();
+  if (node->type()->name() == cdk::TYPE_DOUBLE) 
+    _pf.DDIV();        
+  else 
+    _pf.DIV(); 
 }
 
 void udf::postfix_writer::do_mod_node(cdk::mod_node * const node, int lvl) {
@@ -204,25 +231,29 @@ void udf::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
 void udf::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
-  _pf.LDINT(); // depends on type size
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDDOUBLE();
+  } else {
+    _pf.LDINT(); 
+  }
 }
 
 void udf::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->rvalue()->accept(this, lvl); // determine the new value
-  _pf.DUP32();
-  if (new_symbol() == nullptr) {
-    node->lvalue()->accept(this, lvl); // where to store the value
+  node->rvalue()->accept(this, lvl + 2);
+  if (node->rvalue()->type()->name() == cdk::TYPE_DOUBLE) {
+    if (node->rvalue()->type()->name() == cdk::TYPE_INT) _pf.I2D();
+    _pf.DUP64();
   } else {
-    _pf.DATA(); // variables are all global and live in DATA
-    _pf.ALIGN(); // make sure we are aligned
-    _pf.LABEL(new_symbol()->name()); // name variable location
-    reset_new_symbol();
-    _pf.SINT(0); // initialize it to 0 (zero)
-    _pf.TEXT(); // return to the TEXT segment
-    node->lvalue()->accept(this, lvl);
+    _pf.DUP32();
   }
-  _pf.STINT(); // store the value at address
+
+  node->lvalue()->accept(this, lvl + 2);
+  if (node->type()->name() == cdk::TYPE_DOUBLE) {
+    _pf.STDOUBLE();
+  } else {
+    _pf.STINT();
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -255,6 +286,7 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   // these are just a few library function imports
   _pf.EXTERN("readi");
   _pf.EXTERN("printi");
+  _pf.EXTERN("printd");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
 
@@ -271,7 +303,12 @@ void udf::postfix_writer::do_evaluation_node(udf::evaluation_node * const node, 
     _pf.TRASH(4); // delete the evaluated value
   } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
     _pf.TRASH(4); // delete the evaluated value's address
-  } else {
+  } else if (node->argument()->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.TRASH(8); // delete the evaluated value's address //TODO CUIDADO COM O MALLOC
+  } else if (node->argument()->is_typed(cdk::TYPE_POINTER)) {
+    _pf.TRASH(4); // delete the evaluated value's address
+  }
+  else {
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
   }
@@ -494,7 +531,6 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
     std::cout << "invalid context" << std::endl; 
 
   if (node->initializer() == nullptr) {
-    std::cout << "AAAAAAAAAAAAAAAAAAAAAA\n\n\n\n\n";
     _pf.BSS();
     _pf.ALIGN();
     _pf.LABEL(id);
@@ -563,12 +599,23 @@ void udf::postfix_writer::do_address_of_node(udf::address_of_node * const node, 
 }
 
 void udf::postfix_writer::do_index_node(udf::index_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  node->base()->accept(this, lvl);
+  node->index()->accept(this, lvl);
+  _pf.INT(node->type()->size());
+  _pf.MUL();
+  _pf.ADD();
 }
 
 void udf::postfix_writer::do_input_node(udf::input_node * const node, int lvl) {
 }
 
 void udf::postfix_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  node->argument()->accept(this, lvl); //argument to the stack
+  _pf.INT( cdk::reference_type::cast(node->type())->referenced()->size());
+  _pf.ALLOC(); // allocate
+  _pf.SP(); // put base pointer in stack
 }
 
 void udf::postfix_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {

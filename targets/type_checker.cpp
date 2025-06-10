@@ -21,7 +21,8 @@ void udf::type_checker::do_data_node(cdk::data_node *const node, int lvl) {
   // EMPTY
 }
 void udf::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
-  // EMPTY
+  ASSERT_UNSPEC;
+  node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
 }
 void udf::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
   ASSERT_UNSPEC;
@@ -90,13 +91,15 @@ void udf::type_checker::do_unary_plus_node(cdk::unary_plus_node *const node, int
 void udf::type_checker::processBinaryExpression(cdk::binary_operation_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->left()->accept(this, lvl + 2);
-  if (!node->left()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in left argument of binary expression");
-
   node->right()->accept(this, lvl + 2);
-  if (!node->right()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in right argument of binary expression");
 
-  // in udf, expressions are always int
-  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  if (!node->left()->is_typed(cdk::TYPE_DOUBLE) && !node->left()->is_typed(cdk::TYPE_INT) ) throw std::string("wrong type in left argument of binary expression");
+  if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT) ) throw std::string("wrong type in right argument of binary expression");
+
+  if(node->left()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_DOUBLE))
+    node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+  else
+    node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 
 void udf::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
@@ -139,10 +142,11 @@ void udf::type_checker::do_variable_node(cdk::variable_node *const node, int lvl
   ASSERT_UNSPEC;
   const std::string &id = node->name();
   std::shared_ptr<udf::symbol> symbol = _symtab.find(id);
-
   if (symbol != nullptr) {
     node->type(symbol->type());
+    std::cout << node->lineno() <<": do_variable_node::symbol\n" ;
   } else {
+    std::cout << "do_variable_node::symbol undef\n" ;
     throw id;
   }
 }
@@ -174,7 +178,6 @@ void udf::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   } else if (node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
 
     //TODO: check pointer level
-
     if (node->rvalue()->is_typed(cdk::TYPE_POINTER)) {
       node->type(node->rvalue()->type());
     } else if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
@@ -281,7 +284,7 @@ void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {
 }
 
 void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
-if (node->initializer() != nullptr) {
+  if (node->initializer() != nullptr) {
       node->initializer()->accept(this, lvl + 2);
       if (node->type() == nullptr)
         node->type(node->initializer()->type());
@@ -349,12 +352,39 @@ void udf::type_checker::do_address_of_node(udf::address_of_node * const node, in
 }
 
 void udf::type_checker::do_index_node(udf::index_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+  std::shared_ptr < cdk::reference_type > btype;
+
+  if (node->base()) {
+    node->base()->accept(this, lvl + 2);
+    btype = cdk::reference_type::cast(node->base()->type());
+    if (!node->base()->is_typed(cdk::TYPE_POINTER)) throw std::string("pointer expression expected in index left-value");
+  }
+  //TODO This doesnt look right at all
+  // else {
+  //  btype = cdk::reference_type::cast(_function->type());
+  //  if (!_function->is_typed(cdk::TYPE_POINTER)) throw std::string("return pointer expression expected in index left-value");
+  //}
+
+  node->index()->accept(this, lvl + 2);
+  if (!node->index()->is_typed(cdk::TYPE_INT)) throw std::string("integer expression expected in left-value index");
+
+  node->type(btype->referenced());
 }
 
 void udf::type_checker::do_input_node(udf::input_node * const node, int lvl) {
 }
 
 void udf::type_checker::do_malloc_node(udf::malloc_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+  node->argument()->accept(this, lvl + 2);
+  if (!node->argument()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("integer expression expected in allocation expression");
+  }
+  //TODO pretty sure que double não causa problemas, caso contrario teriamos de verificar pelo 
+  //lnode para saber o tipo o que é chato.
+  auto mytype = cdk::reference_type::create(4, cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+  node->type(mytype);
 }
 
 void udf::type_checker::do_size_of_node(udf::size_of_node * const node, int lvl) {
