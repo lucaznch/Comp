@@ -553,15 +553,14 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _pf.CALL(funcName);
 
-  /*
-  // Trash return value if not used (for non-void functions)
-  if (node->type()->name() == cdk::TYPE_INT || node->type()->name() == cdk::TYPE_STRING ||
-      node->type()->name() == cdk::TYPE_POINTER || node->type()->name() == cdk::TYPE_FUNCTIONAL) {
-    _pf.TRASH(4);
-  } else if (node->type()->name() == cdk::TYPE_DOUBLE) {
-    _pf.TRASH(8);
-  }
-  */
+  if(node->type()->name()==cdk::TYPE_VOID)
+    return;
+
+  if(node->type()->name()==cdk::TYPE_DOUBLE)
+    _pf.LDFVAL64();
+  else
+    _pf.LDFVAL32();
+
 }
 
 void udf::postfix_writer::do_return_node(udf::return_node * const node, int lvl) {
