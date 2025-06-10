@@ -306,7 +306,7 @@ void udf::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
     _pf.ADDR(symbol->name());
   } else {
     _pf.LOCAL(symbol->offset());
-    //std::cerr << "LVAL " << symbol->name() << ":" << symbol->type()->size() << ":" << symbol->offset() << std::endl;
+    std::cerr << "LVAL " << symbol->name() << ":" << symbol->type()->size() << ":" << symbol->offset() << std::endl;
   }
   
   // simplified generation: all variables are global
@@ -374,7 +374,6 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.EXTERN("printd");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
-
   node->declarations()->accept(this, lvl);
 
 }
@@ -519,7 +518,8 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
   frame_size_calculator lsc(_compiler, _symtab, function);
   node->accept(&lsc, lvl);
   _pf.ENTER(lsc.localsize()); // total stack size reserved for local variables
-
+  std::cout << lsc.localsize() << '\n';
+  _offset = 0 ;//The locals are offset from 0
   _context = Context::Body;
   os() << "        ;; before body " << std::endl;
   node->block()->accept(this, lvl);
@@ -604,10 +604,10 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
   }
   else if(_context == Context::Args){
     offset = _offset;
-    _offset -= typesize;
+    _offset += typesize;
   }
   else if(_context == Context::Body){
-    _offset += typesize;
+    _offset -= typesize;
     offset = _offset;
   }
   else{
@@ -615,8 +615,19 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
   }
   std::cout << "OFFSET: " << id << ", " << offset << std::endl;
 
-  auto symbol = new_symbol();
+  auto symbol = udf::make_symbol(false, node->qualifier(), node->type(), id, (bool)node->initializer(), false);
+  if (_symtab.insert(id, symbol)) {
+  } else {
+    auto s = _symtab.find(id);  // retry: forward declarations
+    if (s->qualifier() == Qualifier::tForward) {
+      _symtab.replace(id, symbol);
+    }
+    else {
+      throw std::string("variable '" + id + "' redeclared");
+    }
+  }
   if(symbol){
+      std::cout << "MORRECABRAÂO: " << id << ", " << offset << std::endl;
     symbol->set_offset(offset);
     reset_new_symbol();
   }

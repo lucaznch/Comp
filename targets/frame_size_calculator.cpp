@@ -145,7 +145,8 @@ void udf::frame_size_calculator::do_if_else_node(udf::if_else_node *const node, 
 
 void udf::frame_size_calculator::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
   //Não sei qual é a ideia, logo vemos
-  //ASSERT_SAFE;  //DAVID: HACK!!!
+  //alguem precisa de atribuir tipo aos auto para sabermos o seu tamanho, o ultimate hack seria mesmo 8 a todos e feito
+  ASSERT_SAFE_EXPRESSIONS;  //DAVID: HACK!!!
   _localsize += node->type()->size();
 }
 

@@ -384,8 +384,9 @@ void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {
 void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const node, int lvl) {
   if (node->initializer() != nullptr) {
       node->initializer()->accept(this, lvl + 2);
-      if (node->type() == nullptr)
-        node->type(node->initializer()->type());
+      //TODO WHY WOULD WE NEED THIS?
+      //if (node->type() == nullptr)
+      //  node->type(node->initializer()->type());
 
       if (node->is_typed(cdk::TYPE_INT)) {
         if (!node->initializer()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type for initializer (integer expected).");
@@ -424,20 +425,6 @@ void udf::type_checker::do_var_declaration_node(udf::var_declaration_node *const
       else {
         throw std::string("unknown type for initializer.");
       }
-  }
-  const std::string &id = node->identifier();
-  auto symbol = udf::make_symbol(false, node->qualifier(), node->type(), id, (bool)node->initializer(), false);
-  if (_symtab.insert(id, symbol)) {
-    _parent->set_new_symbol(symbol);  // advise parent that a symbol has been inserted
-  } else {
-    auto s = _symtab.find(id);  // retry: forward declarations
-    if (s->qualifier() == Qualifier::tForward) {
-      _symtab.replace(id, symbol);
-      _parent->set_new_symbol(symbol);  // advise parent that a symbol has been inserted
-    }
-    else {
-      throw std::string("variable '" + id + "' redeclared");
-    }
   }
 }
 
