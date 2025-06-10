@@ -476,10 +476,10 @@ void udf::postfix_writer::do_if_else_node(udf::if_else_node * const node, int lv
 
 void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
   //TODO all this scope stuff
-  //if (node->is_scope()) _symtab.push(); // for block-local vars
+  _symtab.push(); // for block-local vars
   if (node->declarations()) node->declarations()->accept(this, lvl + 2);
   if (node->instructions()) node->instructions()->accept(this, lvl + 2);
-  //if (node->is_scope()) _symtab.pop();
+  _symtab.pop();
 }
 
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
@@ -491,14 +491,16 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
       std::cerr << "Non Forward function " << node->identifier() << " declaration must have body\n";
     return;
   }
-
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _segments.push(funcName);
   auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
-  _symtab.insert(node->identifier(), function);
   _function = function;
   _offset = 8; //4 fp + 4 return address
+  if(!_symtab.insert(node->identifier(), function))
+    std::cout << "Push of " << funcName << " failed\n";
+  //HERE confirmed in gdb insertion suceeded as it should
 
+  _symtab.push(); //scope of args
   if (node->args()) {
     _context = Context::Args; 
     for (size_t ix = 0; ix < node->args()->size(); ix++) {
@@ -529,10 +531,9 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
   _pf.RET();
 
   _context=Context::Global; //we always exit a function 
-  //_symtab.pop(); //TODO later scope of arguments l
+  _symtab.pop(); 
   _function = nullptr; //exited the function declaration
   _segments.pop();
-
   _pf.DATA();   //FIXME could be RODATA what
   _pf.SADDR(funcName);
   
@@ -617,14 +618,17 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
 
   auto symbol = udf::make_symbol(false, node->qualifier(), node->type(), id, (bool)node->initializer(), false);
   if (_symtab.insert(id, symbol)) {
-  } 
-  else {
-    // symbol with the same name already exists!
-
-    // check our scope
+  } else {
+    auto s = _symtab.find(id);  // retry: forward declarations
+    if (s->qualifier() == Qualifier::tForward) {
+      _symtab.replace(id, symbol);
+    }
+    //
+    //else {
+    // throw std::string("variable '" + id + "' redeclared");
+    //}
   }
   if(symbol){
-    std::cout << "var_declr_node symbol: " << id << ", " << offset << std::endl;
     symbol->set_offset(offset);
     reset_new_symbol();
   }
@@ -661,30 +665,22 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
     _pf.SALLOC(typesize);
     return;
   }
+
+
   if (node->is_typed(cdk::TYPE_INT) || node->is_typed(cdk::TYPE_DOUBLE) || node->is_typed(cdk::TYPE_POINTER)) {
     _pf.DATA();
     _pf.ALIGN();
+    if(node->qualifier() == udf::tPublic) _pf.GLOBAL(id,_pf.OBJ()); //só se for public
     _pf.LABEL(id);
 
-    if (!node->is_typed(cdk::TYPE_DOUBLE)){
-      node->initializer()->accept(this, lvl);
-      return;
-    }
+    if(node->initializer()->label()!="integer_node" && node->initializer()->label()!="double_node")
+      throw std::string("Initializer of global variable must be a literal (no math allowed!)");
 
-
-    if (node->initializer()->is_typed(cdk::TYPE_DOUBLE)) {
-      node->initializer()->accept(this, lvl);
-    }
-    else if (node->initializer()->is_typed(cdk::TYPE_INT)) {
-      cdk::integer_node *dclini = dynamic_cast<cdk::integer_node*>(node->initializer());
-      cdk::double_node ddi(dclini->lineno(), dclini->value());
-      ddi.accept(this, lvl);
-    }
-    else {
-      std::cerr << node->lineno() << ": '" << id << "' has bad initializer for real value\n";
-      _errors = true;
-    }
-
+    node->initializer()->accept(this, lvl);
+    if(node->initializer()->type()->name()==cdk::TYPE_DOUBLE)
+      _pf.SDOUBLE(dynamic_cast<cdk::double_node*>(node->initializer())->value());
+    else
+      _pf.SINT(dynamic_cast<cdk::integer_node*>(node->initializer())->value());
     return;
   }
 
