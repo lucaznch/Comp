@@ -388,6 +388,9 @@ void udf::type_checker::do_malloc_node(udf::malloc_node * const node, int lvl) {
 }
 
 void udf::type_checker::do_size_of_node(udf::size_of_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+  node->expression()->accept(this, lvl + 2);
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 
 void udf::type_checker::do_for_node(udf::for_node * const node, int lvl) {

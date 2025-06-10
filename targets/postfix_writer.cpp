@@ -619,6 +619,8 @@ void udf::postfix_writer::do_malloc_node(udf::malloc_node * const node, int lvl)
 }
 
 void udf::postfix_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  _pf.INT(node->expression()->type()->size());
 }
 
 void udf::postfix_writer::do_for_node(udf::for_node * const node, int lvl) {
