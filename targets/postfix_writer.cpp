@@ -393,6 +393,14 @@ void udf::postfix_writer::do_evaluation_node(udf::evaluation_node * const node, 
   } else if (node->argument()->is_typed(cdk::TYPE_POINTER)) {
     _pf.TRASH(4); // delete the evaluated value's address
   }
+  /*
+  else if (node->argument()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    // do nothing, the function pointer is already on the stack
+  }
+  */
+  else if (node->argument()->is_typed(cdk::TYPE_VOID)) {
+    // do nothing, the void value is already on the stack
+  }
   else {
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
