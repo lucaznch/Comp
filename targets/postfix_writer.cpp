@@ -374,8 +374,9 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.EXTERN("printd");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
+  //_symtab.push();
   node->declarations()->accept(this, lvl);
-
+  //_symtab.pop();
 }
 
 //---------------------------------------------------------------------------
@@ -484,13 +485,6 @@ void udf::postfix_writer::do_block_node(udf::block_node * const node, int lvl) {
 
 void udf::postfix_writer::do_function_node(udf::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  if(node->block()==nullptr){
-    if(node->qualifier()==tForward)
-      _pf.EXTERN(node->identifier());
-    else 
-      std::cerr << "Non Forward function " << node->identifier() << " declaration must have body\n";
-    return;
-  }
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _segments.push(funcName);
   auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
@@ -510,7 +504,14 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
     }
     _context = Context::Global;
   }
-
+  if(node->block()==nullptr){
+    if(node->qualifier()==tForward){
+      _pf.EXTERN(node->identifier());
+    }
+    else 
+      std::cerr << "Non Forward function " << node->identifier() << " declaration must have body\n";
+    return;
+  }
   _pf.TEXT(_segments.top());
   _pf.ALIGN();
   if (node->qualifier() == tPublic) _pf.GLOBAL(funcName,  _pf.FUNC()); //globais são as public, as private basta o label
