@@ -353,6 +353,30 @@ void udf::type_checker::do_function_node(udf::function_node *const node, int lvl
 }
 
 void udf::type_checker::do_function_call_node(udf::function_call_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  
+  // Check if the function exists in the symbol table
+  std::shared_ptr<udf::symbol> symbol = _symtab.find(node->identifier());
+  if (!symbol) {
+    throw std::string("undeclared function '" + node->identifier() + "'");
+  }
+
+  /*
+  // Check arguments
+  if (node->arguments()) {
+    for (size_t i = 0; i < node->arguments()->size(); ++i) {
+      cdk::expression_node *arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+      if (arg) arg->accept(this, lvl + 2);
+    }
+  }
+  */
+
+  // Set the type of the function call node to the function's return type
+  auto ftype = cdk::functional_type::cast(symbol->type());
+  if (!ftype) {
+    throw std::string("symbol '" + node->identifier() + "' is not a function");
+  }
+  node->type(ftype->output(0));
 }
 
 void udf::type_checker::do_return_node(udf::return_node *const node, int lvl) {

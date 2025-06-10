@@ -487,7 +487,8 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
 
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _segments.push(funcName);
-   auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  _symtab.insert(node->identifier(), function);
   _function = function;
   _offset = 8; //4 fp + 4 return address
 
@@ -530,6 +531,29 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
 }
 
 void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  /*
+  // Evaluate and push arguments (right-to-left)
+  if (node->arguments()) {
+    for (int i = node->arguments()->size() - 1; i >= 0; --i) {
+      cdk::expression_node *arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+      arg->accept(this, lvl + 2);
+    }
+  }
+  */
+  // Call the function
+  std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+  _pf.CALL(funcName);
+
+  /*
+  // Trash return value if not used (for non-void functions)
+  if (node->type()->name() == cdk::TYPE_INT || node->type()->name() == cdk::TYPE_STRING ||
+      node->type()->name() == cdk::TYPE_POINTER || node->type()->name() == cdk::TYPE_FUNCTIONAL) {
+    _pf.TRASH(4);
+  } else if (node->type()->name() == cdk::TYPE_DOUBLE) {
+    _pf.TRASH(8);
+  }
+  */
 }
 
 void udf::postfix_writer::do_return_node(udf::return_node * const node, int lvl) {
