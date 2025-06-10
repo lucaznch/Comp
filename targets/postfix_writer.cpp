@@ -532,7 +532,7 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
 
 void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  /*
+  
   // Evaluate and push arguments (right-to-left)
   if (node->arguments()) {
     for (int i = node->arguments()->size() - 1; i >= 0; --i) {
@@ -540,7 +540,7 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
       arg->accept(this, lvl + 2);
     }
   }
-  */
+
   // Call the function
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _pf.CALL(funcName);

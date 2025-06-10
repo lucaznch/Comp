@@ -361,7 +361,6 @@ void udf::type_checker::do_function_call_node(udf::function_call_node *const nod
     throw std::string("undeclared function '" + node->identifier() + "'");
   }
 
-  /*
   // Check arguments
   if (node->arguments()) {
     for (size_t i = 0; i < node->arguments()->size(); ++i) {
@@ -369,7 +368,6 @@ void udf::type_checker::do_function_call_node(udf::function_call_node *const nod
       if (arg) arg->accept(this, lvl + 2);
     }
   }
-  */
 
   // Set the type of the function call node to the function's return type
   auto ftype = cdk::functional_type::cast(symbol->type());
