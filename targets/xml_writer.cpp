@@ -60,7 +60,9 @@ void udf::xml_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
 }
 
 void udf::xml_writer::do_address_of_node(udf::address_of_node * const node, int lvl) {
- do_unary_operation(node, lvl);
+  openTag(node, lvl);
+  node->lvalue()->accept(this, lvl + 2);
+  closeTag(node, lvl);
 }
 
 void udf::xml_writer::do_size_of_node(udf::size_of_node * const node, int lvl) {
@@ -153,7 +155,7 @@ void udf::xml_writer::do_program_node(udf::program_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void udf::xml_writer::do_evaluation_node(udf::evaluation_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+  //ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   node->argument()->accept(this, lvl + 2);
   closeTag(node, lvl);

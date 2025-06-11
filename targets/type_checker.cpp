@@ -448,6 +448,9 @@ void udf::type_checker::do_nullptr_node(udf::nullptr_node *const node, int lvl) 
 }
 
 void udf::type_checker::do_address_of_node(udf::address_of_node * const node, int lvl) {
+  ASSERT_UNSPEC;
+  node->lvalue()->accept(this, lvl + 2);
+  node->type(cdk::reference_type::create(4, node->lvalue()->type()));
 }
 
 void udf::type_checker::do_index_node(udf::index_node * const node, int lvl) {

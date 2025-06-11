@@ -750,6 +750,9 @@ void udf::postfix_writer::do_nullptr_node(udf::nullptr_node * const node, int lv
 }
 
 void udf::postfix_writer::do_address_of_node(udf::address_of_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // since the argument is an lvalue, it is already an address
+  node->lvalue()->accept(this, lvl + 2);
 }
 
 void udf::postfix_writer::do_index_node(udf::index_node * const node, int lvl) {

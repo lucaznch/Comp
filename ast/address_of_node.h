@@ -1,15 +1,19 @@
 #pragma once
 
-#include <cdk/ast/unary_operation_node.h>
+#include <cdk/ast/expression_node.h>
+#include <cdk/ast/lvalue_node.h>
 
 namespace udf {
   /**
    * Class for describing address_of_node nodes.
    */
-    class address_of_node : public cdk::unary_operation_node {
+    class address_of_node : public cdk::expression_node {
+        cdk::lvalue_node *_lvalue;
     public:
-        address_of_node(int lineno, cdk::expression_node *arg):
-            cdk::unary_operation_node(lineno, arg) {}
+        address_of_node(int lineno, cdk::lvalue_node *argument):
+            cdk::expression_node(lineno), _lvalue(argument) {}
+
+        cdk::lvalue_node *lvalue() { return _lvalue; }
 
         void accept(basic_ast_visitor *sp, int level) { sp->do_address_of_node(this, level); } 
     };
