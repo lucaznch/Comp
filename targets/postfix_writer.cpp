@@ -374,6 +374,7 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.EXTERN("printd");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
+  _pf.EXTERN("mem_init");
   //_symtab.push();
   node->declarations()->accept(this, lvl);
   //_symtab.pop();
@@ -487,7 +488,7 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
   ASSERT_SAFE_EXPRESSIONS;
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _segments.push(funcName);
-  auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, false);
+  auto function = udf::make_symbol(false, node->qualifier(), node->type(), funcName, false, true);
   _function = function;
   _offset = 8; //4 fp + 4 return address
   if(!_symtab.insert(node->identifier(), function))
@@ -496,11 +497,13 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
 
   _symtab.push(); //scope of args
   if (node->args()) {
+      auto arg_types = function->getArgTypes();
     _context = Context::Args; 
     for (size_t ix = 0; ix < node->args()->size(); ix++) {
-      cdk::basic_node *arg = node->args()->node(ix);
+      cdk::typed_node *arg = dynamic_cast<cdk::typed_node*>(node->args()->node(ix));
       if (arg == nullptr) break; // this means an empty sequence of arguments
       arg->accept(this, 0); // the function symbol is at the top of the stack
+      arg_types->push_back(arg->type());
     }
     _context = Context::Global;
   }
@@ -522,6 +525,7 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
   node->accept(&lsc, lvl);
   _pf.ENTER(lsc.localsize()); // total stack size reserved for local variables
   std::cout << lsc.localsize() << '\n';
+  if (node->identifier() == "udf") _pf.CALL("mem_init");
   _offset = 0 ;//The locals are offset from 0
   _context = Context::Body;
   os() << "        ;; before body " << std::endl;
@@ -535,19 +539,31 @@ void udf::postfix_writer::do_function_node(udf::function_node * const node, int 
   _symtab.pop(); 
   _function = nullptr; //exited the function declaration
   _segments.pop();
-  _pf.DATA();   //FIXME could be RODATA what
-  _pf.SADDR(funcName);
+  //HERE porque?
+  //_pf.DATA();   //FIXME could be RODATA what
+  //_pf.SADDR(funcName);
   
 }
 
 void udf::postfix_writer::do_function_call_node(udf::function_call_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  
+  std::shared_ptr<udf::symbol> symbol = _symtab.find(node->identifier());
+  int args_sz = 0;
   // Evaluate and push arguments (right-to-left)
   if (node->arguments()) {
+    auto arg_types= symbol->getArgTypes();
+    if(node->arguments()->size() != arg_types->size() )
+      throw std::string("Declared number of args doesnt match number in function call\n");
     for (int i = node->arguments()->size() - 1; i >= 0; --i) {
       cdk::expression_node *arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
       arg->accept(this, lvl + 2);
+      args_sz+=arg->type()->size();
+      if(arg->type() != arg_types->at(i)){
+        if(arg->type()->name() == cdk::TYPE_INT && arg_types->at(i)->name()== cdk::TYPE_DOUBLE)
+          _pf.I2D();
+        else
+          throw std::string("Function call arg types dont match declaration\n");
+      }
     }
   }
 
@@ -555,6 +571,7 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
   std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
   _pf.CALL(funcName);
 
+  _pf.TRASH(args_sz);
   if(node->type()->name()==cdk::TYPE_VOID)
     return;
 

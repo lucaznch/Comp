@@ -18,12 +18,14 @@ namespace udf {
     int _offset = 0; // 0 (zero) means global variable/function
     bool _function; // false for variables
     bool _forward = false;
-
+    std::shared_ptr<std::vector<std::shared_ptr<cdk::basic_type>>> _arg_types = nullptr;
   public:
     symbol(bool constant, int qualifier, std::shared_ptr<cdk::basic_type> type, const std::string &name, bool initialized,
            bool function, bool forward = false) :
         _name(name), _value(0), _constant(constant), _qualifier(qualifier), _type(type), _initialized(initialized), _function(
             function), _forward(forward) {
+              if(_function) 
+                _arg_types = std::make_shared<std::vector<std::shared_ptr<cdk::basic_type>>>();
     }
 
     ~symbol() {
@@ -83,6 +85,7 @@ namespace udf {
       return _forward;
     }
 
+    std::shared_ptr<std::vector<std::shared_ptr<cdk::basic_type>>> getArgTypes(){ return _arg_types;}
   };
 
   inline auto make_symbol(bool constant, int qualifier, std::shared_ptr<cdk::basic_type> type, const std::string &name,
