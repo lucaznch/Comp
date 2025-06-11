@@ -93,19 +93,31 @@ void udf::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
   node->left()->accept(this, lvl + 2);
   node->right()->accept(this, lvl + 2);
 
-  if(node->left()->is_typed(cdk::TYPE_POINTER) && !node->right()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in argument of binary expression");
-  if(!node->left()->is_typed(cdk::TYPE_INT) && node->right()->is_typed(cdk::TYPE_POINTER)) throw std::string("wrong type in argument of binary expression");
-
-  if (!node->left()->is_typed(cdk::TYPE_DOUBLE) && !node->left()->is_typed(cdk::TYPE_INT) && !node->left()->is_typed(cdk::TYPE_POINTER) ) throw std::string("wrong type in argument of binary expression");
-  if (!node->right()->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_INT) && !node->right()->is_typed(cdk::TYPE_POINTER)) throw std::string("wrong type in arugment of binary expression");
-
-  if(node->left()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_DOUBLE))
+  // if left is pointer and right is not int, throw error
+  if (node->left()->is_typed(cdk::TYPE_POINTER) && !node->right()->is_typed(cdk::TYPE_INT))
+    throw std::string("invalid pointer addition: right operand must be int");
+  // if right is pointer and left is not int, throw error
+  if (!node->left()->is_typed(cdk::TYPE_INT) && node->right()->is_typed(cdk::TYPE_POINTER))
+    throw std::string("invalid pointer addition: left operand must be int");
+  // if both are double assign double type
+  if (node->left()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_DOUBLE)) {
     node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
-  else if(node->left()->is_typed(cdk::TYPE_POINTER) || node->right()->is_typed(cdk::TYPE_POINTER))
-    node->type(cdk::primitive_type::create(4, cdk::TYPE_POINTER));
-  else
+  }
+  // if left is pointer and right is int assign pointer type
+  else if (node->left()->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
+    auto left_ptr = cdk::reference_type::cast(node->left()->type());
+    node->type(cdk::reference_type::create(4, left_ptr->referenced()));  // pointer arithmetic
+  }
+  // if left is int and right is pointer assign pointer type
+  else if (node->left()->is_typed(cdk::TYPE_INT) && node->right()->is_typed(cdk::TYPE_POINTER)) {
+    auto right_ptr = cdk::reference_type::cast(node->right()->type());
+    node->type(cdk::reference_type::create(4, right_ptr->referenced())); // pointer arithmetic
+  }
+  else {
     node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  }
 }
+
 void udf::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->left()->accept(this, lvl + 2);
@@ -444,14 +456,20 @@ void udf::type_checker::do_index_node(udf::index_node * const node, int lvl) {
 
   if (node->base()) {
     node->base()->accept(this, lvl + 2);
+    if (!node->base()->is_typed(cdk::TYPE_POINTER)) if (!node->base()->is_typed(cdk::TYPE_POINTER)) throw std::string("pointer expression expected in index left-value");
+
     btype = cdk::reference_type::cast(node->base()->type());
-    if (!node->base()->is_typed(cdk::TYPE_POINTER)) throw std::string("pointer expression expected in index left-value");
+    if (!btype) throw std::string("invalid base pointer type in index expression");
   }
   //TODO This doesnt look right at all
   // else {
   //  btype = cdk::reference_type::cast(_function->type());
   //  if (!_function->is_typed(cdk::TYPE_POINTER)) throw std::string("return pointer expression expected in index left-value");
   //}
+  else {
+    // we enter this block if the base is not defined, which means that we are dealing with an auto type?
+    printf("\033[1;31m index base not defined \n\033[0m");
+  }
 
   node->index()->accept(this, lvl + 2);
   if (!node->index()->is_typed(cdk::TYPE_INT)) throw std::string("integer expression expected in left-value index");
