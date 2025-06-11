@@ -641,10 +641,10 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
     if (s->qualifier() == Qualifier::tForward) {
       _symtab.replace(id, symbol);
     }
-    //
-    //else {
-    // throw std::string("variable '" + id + "' redeclared");
-    //}
+    
+    else {
+     throw std::string("variable '" + id + "' redeclared");
+    }
   }
   if(symbol){
     symbol->set_offset(offset);
@@ -760,6 +760,7 @@ void udf::postfix_writer::do_malloc_node(udf::malloc_node * const node, int lvl)
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl); //argument to the stack
   _pf.INT( cdk::reference_type::cast(node->type())->referenced()->size());
+  _pf.MUL();
   _pf.ALLOC(); // allocate
   _pf.SP(); // put base pointer in stack
 }
@@ -770,11 +771,14 @@ void udf::postfix_writer::do_size_of_node(udf::size_of_node * const node, int lv
 }
 
 void udf::postfix_writer::do_for_node(udf::for_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+  //Nope, since var_declaration_node creates symbols in the postfix_writer we cant have 
+  //the type checker doing the anything after inits until those ave been accpeted here and so forth
+  //ASSERT_SAFE_EXPRESSIONS; 
   int forCond = ++_lbl;
   int forStep = ++_lbl;
   int forEnd = ++_lbl;
 
+  _symtab.push();
   _forCond.push_back(forCond); // after init, before body
   _forStep.push_back(forStep); // after intruction
   _forEnd.push_back(forEnd); // after for
@@ -795,6 +799,8 @@ void udf::postfix_writer::do_for_node(udf::for_node * const node, int lvl) {
   _forCond.pop_back();
   _forStep.pop_back();
   _forEnd.pop_back();
+  _symtab.pop();
+
 }
 
 void udf::postfix_writer::do_continue_node(udf::continue_node * const node, int lvl) {

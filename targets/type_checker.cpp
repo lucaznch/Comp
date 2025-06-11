@@ -220,9 +220,9 @@ void udf::type_checker::do_variable_node(cdk::variable_node *const node, int lvl
   std::shared_ptr<udf::symbol> symbol = _symtab.find(id);
   if (symbol != nullptr) {
     node->type(symbol->type());
-    std::cout << node->lineno() <<": do_variable_node::symbol\n" ;
+    std::cout << node->lineno() << ": "<< id <<": do_variable_node::symbol\n" ;
   } else {
-    std::cout << "do_variable_node::symbol undef\n" ;
+    std::cout << node->lineno() << ": "<< id <<": do_variable_node::symbol undef\n" ;
     throw id;
   }
 }
