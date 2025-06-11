@@ -694,12 +694,20 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
     if(node->initializer()->label()!="integer_node" && node->initializer()->label()!="double_node")
       throw std::string("Initializer of global variable must be a literal (no math allowed!)");
 
+    if(node->type()->name()==cdk::TYPE_DOUBLE){
+      if(node->initializer()->type()->name()==cdk::TYPE_INT){
+        //cast expression_node to integer_node so we have access to value()
+        cdk::integer_node *dclini = dynamic_cast<cdk::integer_node*>(node->initializer());
+        //new instance of double_node taking the integer value
+        cdk::double_node ddi(dclini->lineno(), dclini->value());
+        //have that one accept the visitor instead
+        ddi.accept(this, lvl);
+        return;
+      }
+    }
+
     node->initializer()->accept(this, lvl);
-    if(node->initializer()->type()->name()==cdk::TYPE_DOUBLE)
-      _pf.SDOUBLE(dynamic_cast<cdk::double_node*>(node->initializer())->value());
-    else
-      _pf.SINT(dynamic_cast<cdk::integer_node*>(node->initializer())->value());
-    return;
+
   }
 
   if (node->is_typed(cdk::TYPE_STRING)) {
@@ -749,6 +757,7 @@ void udf::postfix_writer::do_index_node(udf::index_node * const node, int lvl) {
   node->base()->accept(this, lvl);
   node->index()->accept(this, lvl);
   _pf.INT(node->type()->size());
+  std::cout <<  node->type()->size() << std::endl ; 
   _pf.MUL();
   _pf.ADD();
 }

@@ -34,7 +34,7 @@ bool num_to_real(double &val, const std::string &s) {
 %}
 %x X_COMMENT X_STRING
 %%
-  yydebug=1; set_debug(1);
+  //yydebug=1; set_debug(1);
 
 "//".*                 ;                          /* ignore comments */
 
