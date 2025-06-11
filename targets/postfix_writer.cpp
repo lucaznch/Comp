@@ -326,7 +326,7 @@ void udf::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 void udf::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->rvalue()->accept(this, lvl + 2);
-  if (node->rvalue()->type()->name() == cdk::TYPE_DOUBLE) {
+  if (node->type()->name() == cdk::TYPE_DOUBLE) {
     if (node->rvalue()->type()->name() == cdk::TYPE_INT) _pf.I2D();
     _pf.DUP64();
   } else {
