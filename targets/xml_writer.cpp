@@ -161,40 +161,6 @@ void udf::xml_writer::do_evaluation_node(udf::evaluation_node * const node, int 
   closeTag(node, lvl);
 }
 
-/*
-void udf::xml_writer::do_print_node(udf::print_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-  node->argument()->accept(this, lvl + 2);
-  closeTag(node, lvl);
-}
-*/
-
-//---------------------------------------------------------------------------
-/*
-void udf::xml_writer::do_read_node(udf::read_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-  node->argument()->accept(this, lvl + 2);
-  closeTag(node, lvl);
-}
-*/
-//---------------------------------------------------------------------------
-/*
-void udf::xml_writer::do_while_node(udf::while_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-  openTag("condition", lvl + 2);
-  node->condition()->accept(this, lvl + 4);
-  closeTag("condition", lvl + 2);
-  openTag("block", lvl + 2);
-  node->block()->accept(this, lvl + 4);
-  closeTag("block", lvl + 2);
-  closeTag(node, lvl);
-}
-*/
-//---------------------------------------------------------------------------
-
 void udf::xml_writer::do_if_node(udf::if_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);

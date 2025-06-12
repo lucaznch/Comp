@@ -344,14 +344,12 @@ void udf::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 //---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_program_node(udf::program_node * const node, int lvl) {
-  //TODO acho que nada disto é necessario no nosso
-  //olhando para o til talvez o RTS exiga que a primeira função seja a main, pora gora vou assumir que não
+  // TODO: is this necessary? maybe the RTS mandates that the first function is main
   /*
   // Note that Simple doesn't have functions. Thus, it doesn't need
   // a function node. However, it must start in the main function.
   // The ProgramNode (representing the whole program) doubles as a
   // main function node.
-
 
   // generate the main function (RTS mandates that its name be "_main")
   _pf.TEXT();
@@ -368,6 +366,7 @@ void udf::postfix_writer::do_program_node(udf::program_node * const node, int lv
   _pf.LEAVE();
   _pf.RET();
   */
+
   // these are just a few library function imports
   _pf.EXTERN("readi");
   _pf.EXTERN("printi");
@@ -407,49 +406,6 @@ void udf::postfix_writer::do_evaluation_node(udf::evaluation_node * const node, 
     exit(1);
   }
 }
-
-/*
-void udf::postfix_writer::do_print_node(udf::print_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value to print
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.CALL("printi");
-    _pf.TRASH(4); // delete the printed value
-  } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.CALL("prints");
-    _pf.TRASH(4); // delete the printed value's address
-  } else {
-    std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-    exit(1);
-  }
-  _pf.CALL("println"); // print a newline
-}
-*/
-
-//---------------------------------------------------------------------------
-/*
-void udf::postfix_writer::do_read_node(udf::read_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  _pf.CALL("readi");
-  _pf.LDFVAL32();
-  node->argument()->accept(this, lvl);
-  _pf.STINT();
-}
-*/
-//---------------------------------------------------------------------------
-/*
-void udf::postfix_writer::do_while_node(udf::while_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  int lbl1, lbl2;
-  _pf.LABEL(mklbl(lbl1 = ++_lbl));
-  node->condition()->accept(this, lvl);
-  _pf.JZ(mklbl(lbl2 = ++_lbl));
-  node->block()->accept(this, lvl + 2);
-  _pf.JMP(mklbl(lbl1));
-  _pf.LABEL(mklbl(lbl2));
-}
-*/
-//---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_if_node(udf::if_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;

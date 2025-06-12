@@ -324,30 +324,6 @@ void udf::type_checker::do_evaluation_node(udf::evaluation_node *const node, int
   node->argument()->accept(this, lvl + 2);
 }
 
-/*
-void udf::type_checker::do_print_node(udf::print_node *const node, int lvl) {
-  node->argument()->accept(this, lvl + 2);
-}
-*/
-
-//---------------------------------------------------------------------------
-/*
-void udf::type_checker::do_read_node(udf::read_node *const node, int lvl) {
-  try {
-    node->argument()->accept(this, lvl);
-  } catch (const std::string &id) {
-    throw "undeclared variable '" + id + "'";
-  }
-}
-*/
-//---------------------------------------------------------------------------
-/*
-void udf::type_checker::do_while_node(udf::while_node *const node, int lvl) {
-  node->condition()->accept(this, lvl + 4);
-}
-*/
-//---------------------------------------------------------------------------
-
 void udf::type_checker::do_if_node(udf::if_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
 }
@@ -470,7 +446,7 @@ void udf::type_checker::do_index_node(udf::index_node * const node, int lvl) {
   //  if (!_function->is_typed(cdk::TYPE_POINTER)) throw std::string("return pointer expression expected in index left-value");
   //}
   else {
-    // we enter this block if the base is not defined, which means that we are dealing with an auto type?
+    // we enter this block if the base is not defined, which means that we are dealing with ?
     printf("\033[1;31m index base not defined \n\033[0m");
   }
 
