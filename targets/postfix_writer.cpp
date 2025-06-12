@@ -524,8 +524,15 @@ void udf::postfix_writer::do_function_call_node(udf::function_call_node * const 
     }
   }
 
-  // Call the function
-  std::string funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+
+  std::string funcName;
+  
+  if (symbol->qualifier() == udf::tForward && node->identifier() == "argc") {
+    funcName = node->identifier();
+  }
+  else {
+    funcName = (node->identifier() == "udf") ? "_main" : "_FUNC" + node->identifier();
+  }
   _pf.CALL(funcName);
 
   _pf.TRASH(args_sz);
