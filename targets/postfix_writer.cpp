@@ -13,13 +13,7 @@ void udf::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
 
-void udf::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  if (_context == Context::Body) {
-    _pf.DOUBLE(node->value()); // load number to the stack
-  } else {
-    _pf.SDOUBLE(node->value());    // double is on the DATA segment
-  }
-}
+//---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
@@ -72,6 +66,14 @@ void udf::postfix_writer::do_integer_node(cdk::integer_node * const node, int lv
   }
 }
 
+void udf::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
+  if (_context == Context::Body) {
+    _pf.DOUBLE(node->value()); // load number to the stack
+  } else {
+    _pf.SDOUBLE(node->value());    // double is on the DATA segment
+  }
+}
+
 void udf::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
   int lbl1;
   /* generate the string literal */
@@ -105,7 +107,6 @@ void udf::postfix_writer::do_unary_plus_node(cdk::unary_plus_node * const node, 
 }
 
 //---------------------------------------------------------------------------
-
 
 void udf::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
@@ -192,6 +193,8 @@ void udf::postfix_writer::do_mod_node(cdk::mod_node * const node, int lvl) {
   node->right()->accept(this, lvl);
   _pf.MOD();
 }
+
+//---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_lt_node(cdk::lt_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
@@ -415,8 +418,6 @@ void udf::postfix_writer::do_if_node(udf::if_node * const node, int lvl) {
   node->block()->accept(this, lvl + 2);
   _pf.LABEL(mklbl(lbl1));
 }
-
-//---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_if_else_node(udf::if_else_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
@@ -694,6 +695,8 @@ void udf::postfix_writer::do_var_declaration_node(udf::var_declaration_node * co
   }
 }
 
+//---------------------------------------------------------------------------
+
 void udf::postfix_writer::do_nullptr_node(udf::nullptr_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   
@@ -721,9 +724,6 @@ void udf::postfix_writer::do_index_node(udf::index_node * const node, int lvl) {
   _pf.ADD();
 }
 
-void udf::postfix_writer::do_input_node(udf::input_node * const node, int lvl) {
-}
-
 void udf::postfix_writer::do_malloc_node(udf::malloc_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl); //argument to the stack
@@ -737,6 +737,11 @@ void udf::postfix_writer::do_size_of_node(udf::size_of_node * const node, int lv
   ASSERT_SAFE_EXPRESSIONS;
   _pf.INT(node->expression()->type()->size());
 }
+
+void udf::postfix_writer::do_input_node(udf::input_node * const node, int lvl) {
+}
+
+//---------------------------------------------------------------------------
 
 void udf::postfix_writer::do_for_node(udf::for_node * const node, int lvl) {
   //Nope, since var_declaration_node creates symbols in the postfix_writer we cant have 
@@ -777,6 +782,8 @@ void udf::postfix_writer::do_continue_node(udf::continue_node * const node, int 
 void udf::postfix_writer::do_break_node(udf::break_node * const node, int lvl) {
 }
 
+//---------------------------------------------------------------------------
+
 void udf::postfix_writer::do_capacity_node(udf::capacity_node * const node, int lvl) {
 }
 
@@ -800,6 +807,9 @@ void udf::postfix_writer::do_contraction_node(udf::contraction_node * const node
 
 void udf::postfix_writer::do_tensor_node(udf::tensor_node * const node, int lvl){
 }
+
+//---------------------------------------------------------------------------
+
 
 void udf::postfix_writer::do_write_node(udf::write_node * const node, int lvl) {
     ASSERT_SAFE_EXPRESSIONS;
