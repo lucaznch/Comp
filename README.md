@@ -110,24 +110,24 @@ The only admissible literal for pointers is indicated by the reserved word nullp
 ## Grammar
 The grammar of the language is summarized below. It is assumed that elements in fixed type are literals; that curly brackets group elements: ( and ); that alternative elements are separated by a vertical bar: |; that optional elements are enclosed in square brackets: [ and ]; that elements that repeat zero or more times are enclosed in ⟨ and ⟩. Some elements used in the grammar are also elements of the described language if represented in fixed type (e.g., parentheses).
 
-|                   |   |                                                                                           |
-|-------------------|---|-------------------------------------------------------------------------------------------|
-| file              | → | declaration ⟨ declaration ⟩                                                               |
-| declaration       | → | variable ; | function                                                                     |
-| variable          | → | [ public | forward ] type identifier [ = expression ]                                     |
-| variable          | → | [ public ] auto identifier = expression                                                   |
-| function          | → | [ public | forward ] ( type | auto ) identificador ( [ variables ] ) [ block ]            |
-| variables         | → | variable ⟨ , variable ⟩                                                                   |
-| type              | → | int | real | string | void | tensor< dimension ⟨ , dimension ⟩ > | ptr< ( type | auto ) > |
-| block             | → | { ⟨ declaration ⟩ ⟨ instruction ⟩ }                                                       |
-| instruction       | → | expression ; | write expressões ; | writeln expressões ;                                  |
-| instruction       | → | break | continue | return [ expression ] ;                                                |
-| instruction       | → | conditional-instr | iteration-instr | block                                               |
-| expressions       | → | expression ⟨ , expression ⟩                                                               |
-| conditional-instr | → | if ( expression ) instruction                                                             |
-| conditional-instr | → | if ( expression ) instruction ⟨ elif ( expression ) instruction ⟩ [ else instruction ]    |
-| iteration-instr   | → | for ( [ variables ] ; [ expressões ] ; [ expressões ] ) instruction                       |
-| iteration-instr   | → | for ( [ expressões ] ; [ expressões ] ; [ expressões ] ) instruction                      |
+|                   |   |                                                                                                 |
+|-------------------|---|-------------------------------------------------------------------------------------------------|
+| file              | → | declaration ⟨ declaration ⟩                                                                     |
+| declaration       | → | variable ; \| function                                                                          |
+| variable          | → | [ public \| forward ] type identifier [ = expression ]                                          |
+| variable          | → | [ public ] auto identifier = expression                                                         |
+| function          | → | [ public \| forward ] ( type \| auto ) identifier ( [ variables ] ) [ block ]                   |
+| variables         | → | variable ⟨ , variable ⟩                                                                         |
+| type              | → | int \| real \| string \| void \| tensor< dimension ⟨ , dimension ⟩ > \| ptr< ( type \| auto ) > |
+| block             | → | { ⟨ declaration ⟩ ⟨ instruction ⟩ }                                                             |
+| instruction       | → | expression ; \| write expressions ; \| writeln expressions ;                                    |
+| instruction       | → | break \| continue \| return [ expression ] ;                                                    |
+| instruction       | → | conditional-instr \| iteration-instr \| block                                                   |
+| expressions       | → | expression ⟨ , expression ⟩                                                                     |
+| conditional-instr | → | if ( expression ) instruction                                                                   |
+| conditional-instr | → | if ( expression ) instruction ⟨ elif ( expression ) instruction ⟩ [ else instruction ]          |
+| iteration-instr   | → | for ( [ variables ] ; [ expressions ] ; [ expressions ] ) instruction                           |
+| iteration-instr   | → | for ( [ expressions ] ; [ expressions ] ; [ expressions ] ) instruction                         |
 
 
 ### Types, identifiers, literals and expression definitions
